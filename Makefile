@@ -9,7 +9,7 @@ BINS = seq
 
 all: $(OBJS) $(BINS)
 
-seq: seq.o
+seq: seq.o $(OBJS)
 	$(CC) $(OBJS) seq.o -o seq
 
 seq.o: seq.c
