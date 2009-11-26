@@ -4,33 +4,6 @@
 
 #include "map.h"
 
-Rabbit*
-map_new_rabbit(int x, int y)
-{
-  Rabbit* ret = (Rabbit*)malloc(sizeof(Rabbit));
-
-  Object_type(ret) = RABBIT;
-  Object_x(ret) = x;
-  Object_y(ret) = y;
-  ret->last_procreation = 0;
-
-  return ret;
-}
-
-Fox*
-map_new_fox(int x, int y)
-{
-  Fox* ret = (Fox*)malloc(sizeof(Fox));
-
-  Object_type(ret) = FOX;
-  Object_x(ret) = x;
-  Object_y(ret) = y;
-  ret->last_procreation = 0;
-  ret->last_food = 0;
-
-  return ret;
-}
-
 void
 map_free(Map* map)
 {
@@ -83,7 +56,7 @@ map_read(FILE* fp)
     for(j = 0; j < col; ++j) {
       Position *pos = Position_at(map, i, j);
       
-      pos->obj = pos->new = NULL;
+      pos->obj = pos->list_start = pos->list_end = NULL;
       pos->is_rock = FALSE;
     }
   
@@ -104,9 +77,9 @@ map_read(FILE* fp)
     }
     
     if(strcmp(type, "RAPOSA") == 0)
-      obj = (Object*)map_new_fox(x, y);
+      obj = (Object*)object_new_fox(x, y);
     else if(strcmp(type, "COELHO") == 0)
-      obj = (Object*)map_new_rabbit(x, y);
+      obj = (Object*)object_new_rabbit(x, y);
     else
       obj = NULL;
       
@@ -163,18 +136,6 @@ map_print(Map* map)
   }
   
   print_line(map->col + 2);
-}
-
-void
-map_change(Map* map)
-{
-  int i, j;
-  
-  for(i = 0; i < map->lin; ++i)
-    for(j = 0; j < map->col; ++j) {
-      Position_at(map, i, j)->obj = Position_at(map, i, j)->new;
-      Position_at(map, i, j)->new = NULL;
-    }
 }
 
 void

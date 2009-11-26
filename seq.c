@@ -11,27 +11,6 @@ static int ger;
 #define CLEAR_FREE() memset(free_pos, TRUE, sizeof(free_pos))
 
 static void
-move_rabbit(Position* new_pos, Rabbit* rabbit)
-{
-  Object* current = new_pos->new;
-  Boolean change = TRUE;
-  
-  if(current && current->type == RABBIT) {
-    // ja contem um coelho!
-    // fica o que tiver mais idade
-    Rabbit* cur_rabbit = (Rabbit*)current;
-    
-    map->rabbit_collision++;
-    
-    if(rabbit->last_procreation < cur_rabbit->last_procreation)
-      change = FALSE;
-  }
-  
-  if(change)
-    new_pos->new = (Object*)rabbit;
-}
-
-static void
 simulate_rabbit(Position* pos)
 {
   Rabbit* rabbit = (Rabbit*)pos->obj;
@@ -66,8 +45,7 @@ simulate_rabbit(Position* pos)
   
   if(total_free == 0) {
     // não há casas livres, manter...
-    pos->new = pos->obj;
-    
+    position_add_object(pos, pos->obj);
     return;
   }
   
@@ -92,25 +70,10 @@ simulate_rabbit(Position* pos)
     rabbit->last_procreation = 0;
     map->rabbit_reprod++;
     
-    move_rabbit(pos, map_new_rabbit(Coord_x(tmp_coord), Coord_y(tmp_coord)));
+    position_add_object(pos, (Object*)object_new_rabbit(Coord_x(tmp_coord), Coord_y(tmp_coord)));
   }
   
-  move_rabbit(new_pos, rabbit);
-}
-
-static void
-move_fox(Position* pos, Fox* fox)
-{
-  Object* current = pos->new;
-  
-  if(!current) {
-    pos->new = (Object*)fox;
-    return;
-  }
-  
-  if(current->type == FOX) {
-    // fica
-  }
+  position_add_object(new_pos, (Object*)rabbit);
 }
 
 static void
@@ -156,7 +119,7 @@ simulate_fox(Position* pos)
       continue;
     }
     
-    if(tmp_pos->new && tmp_pos->new->type == RABBIT) {
+    if(tmp_pos->obj && tmp_pos->obj->type == RABBIT) {
       with_rabbits[i] = TRUE;
       ++rabbits;
     }
@@ -164,8 +127,7 @@ simulate_fox(Position* pos)
   
   if(total_free == 0) {
     // não há casas livres, manter...
-    pos->new = pos->obj;
-   
+    position_add_object(pos, pos->obj);
     return;
   }
  
@@ -204,15 +166,80 @@ simulate_fox(Position* pos)
   other = Position_at_coord(map, tmp_coord);
   
   if(fox->last_procreation >= map->ger_proc_raposas) {
-    // vai procrear
+    // vai procriar
     
     fox->last_procreation = 0;
     
-    Fox* child = map_new_fox(Coord_x(tmp_coord), Coord_y(tmp_coord));
-    move_fox(pos, child);
+    position_add_object(pos, (Object*)object_new_fox(Coord_x(tmp_coord), Coord_y(tmp_coord)));
   }
   
-  move_fox(other, fox);
+  position_add_object(other, (Object*)fox);
+}
+
+static void
+resolve_conflict(Position* pos)
+{
+  ObjectList* list = pos->list_start;
+  
+  Rabbit* best_rabbit = NULL;
+  Fox* oldest_fox = NULL;
+  Fox* hungriest_fox = NULL;
+  Fox* fox;
+  Rabbit *rabbit;
+  Object* obj;
+  
+  while(list) {
+    obj = ObjectList_elem(list);
+    
+    switch(obj->type) {
+      case FOX:
+        fox = (Fox*)obj;
+      
+        if(!best_rabbit)
+          if(!hungriest_fox || hungriest_fox->last_food > fox->last_food)
+            hungriest_fox = fox;
+          
+        if(!oldest_fox || oldest_fox->last_procreation > fox->last_procreation)
+          oldest_fox = fox;
+          
+      break;
+      case RABBIT:
+        if(!oldest_fox && !hungriest_fox) {
+          rabbit = (Rabbit*)obj;
+          
+          if(!best_rabbit || rabbit->last_procreation > best_rabbit->last_procreation)
+            best_rabbit = rabbit;
+        }
+      break;
+    }
+    
+    list = ObjectList_next(list);
+  }
+  Object* dont_remove = NULL;
+  
+  if(!oldest_fox && best_rabbit) { // no foxes, only rabbits
+    dont_remove = (Object*)best_rabbit;
+  } else if(hungriest_fox && !best_rabbit) { // only foxes
+    dont_remove = (Object*)hungriest_fox;
+  } else if(oldest_fox && best_rabbit) { // foxes and rabbits
+    dont_remove = (Object*)oldest_fox;
+    oldest_fox->last_food = 0;
+  }
+  
+  // delete other objects
+  list = pos->list_start;
+  
+  while(list) {
+    obj = ObjectList_elem(list);
+    
+    if(obj != dont_remove)
+      free(obj);
+    
+    list = ObjectList_next(list);
+  }
+  
+  if(dont_remove)
+    pos->obj = dont_remove;
 }
 
 static void
@@ -220,27 +247,37 @@ simulate_gen()
 {
   int i, j;
   
-  // simulate rabbits
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j) {
       Position *pos = Position_at(map, i, j);
       
-      if(pos->obj && pos->obj->type == RABBIT) {
-        simulate_rabbit(pos);
+      if(pos->obj) {
+        switch(pos->obj->type) {
+          case RABBIT:
+            simulate_rabbit(pos); break;
+          case FOX:
+            simulate_fox(pos); break;
+        }
+        
+        pos->obj = NULL;
       }
     }
   
-  // simulate foxes
-  for(i = 0; i < map->lin; ++i)
+  // resolver conflitos
+  for(i = 0; i < map->lin; ++i) {
     for(j = 0; j < map->col; ++j) {
-      Position *pos = Position_at(map, i, j);
+      Position* pos = Position_at(map, i, j);
       
-      if(pos->obj && pos->obj->type == FOX)  {
-        simulate_fox(pos);
+      if(position_has_list(pos)) {
+        resolve_conflict(pos);
       }
-    }
+    }  
+  }
   
-  map_change(map);
+  // libertar listas
+  for(i = 0; i < map->lin; ++i)
+    for(j = 0; j < map->col; ++j)
+      position_free_list(Position_at(map, i, j));
 }
 
 static void
@@ -250,7 +287,6 @@ simulate()
     simulate_gen();
     printf("Generation %d:\n", ger + 1);
     map_print(map);
-    printf("========================\n");
   }
 }
 

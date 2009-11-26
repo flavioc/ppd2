@@ -5,38 +5,7 @@
 #include <stdio.h>
 
 #include "utils.h"
-
-typedef enum {
-  RABBIT,
-  FOX
-} ObjectType;
-
-typedef struct {
-  ObjectType type;
-  Coord coord;
-} Object;
-
-typedef struct {
-  Object comm;
-  int last_procreation;
-} Rabbit;
-
-typedef struct {
-  Object comm;
-  int last_procreation;
-  int last_food;
-} Fox;
-
-#define Object_type(OBJ) (OBJ)->comm.type
-#define Object_coord(OBJ) (OBJ)->comm.coord
-#define Object_x(OBJ) Coord_x(Object_coord(OBJ))
-#define Object_y(OBJ) Coord_y(Object_coord(OBJ))
-
-typedef struct {
-  Boolean is_rock;
-  Object* obj;
-  Object* new;
-} Position;
+#include "position.h"
 
 typedef struct {
   int ger_proc_coelhos;
@@ -52,16 +21,13 @@ typedef struct {
   Position *matrix;
 } Map;
 
-Rabbit* map_new_rabbit(int x, int y);
-Fox*    map_new_fox(int x, int y);
+#define Position_at(MAP, X, Y) ((MAP)->matrix + (X) * (MAP)->col + (Y))
+#define Position_at_coord(MAP, COORD) Position_at(MAP, Coord_x(COORD), Coord_y(COORD))
+
 Map*    map_read(FILE *fp);
 void    map_print(Map* map);
 void    map_free(Map* map);
-void    map_change(Map* map);
 Boolean map_inside(Map* map, Coord coord);
 void    map_statistics(Map* map);
-
-#define Position_at(MAP, X, Y) ((MAP)->matrix + (X) * (MAP)->col + (Y))
-#define Position_at_coord(MAP, COORD) Position_at(MAP, Coord_x(COORD), Coord_y(COORD))
 
 #endif
