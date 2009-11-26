@@ -164,6 +164,28 @@ map_statistics(Map* map)
   printf("===================================\n");
 }
 
+void
+map_output(Map* map, FILE* fp)
+{
+  int i, j;
+  
+  fprintf(fp, "MATRIZ %d %d\n", map->lin, map->col);
+  
+  for(i = 0; i < map->lin; ++i) {
+    for(j = 0; j < map->col; ++j) {
+      Position* pos = Position_at(map, i, j);
+      
+      if(pos->is_rock)
+        fprintf(fp, "ROCHA %d %d\n", i, j);
+      else if(pos->obj)
+        switch(pos->obj->type) {
+          case FOX: fprintf(fp, "RAPOSA %d %d\n", i, j); break;
+          case RABBIT: fprintf(fp, "COELHO %d %d\n", i, j); break;
+        }
+    }
+  }
+}
+
 Boolean
 map_inside(Map* map, Coord coord)
 {

@@ -303,6 +303,7 @@ main()
   printf("Map end:\n");
   map_print(map);
   map_statistics(map);
+  map_output(map, stdout);
   map_free(map);
   
   return EXIT_SUCCESS;
