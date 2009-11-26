@@ -56,7 +56,8 @@ map_read(FILE* fp)
     for(j = 0; j < col; ++j) {
       Position *pos = Position_at(map, i, j);
       
-      pos->obj = pos->list_start = pos->list_end = NULL;
+      pos->list_start = pos->list_end = NULL;
+      pos->obj = NULL;
       pos->is_rock = FALSE;
     }
   
