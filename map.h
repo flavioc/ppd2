@@ -28,7 +28,8 @@ typedef struct {
 Map*    map_read(FILE *fp);
 void    map_print(Map* map);
 void    map_free(Map* map);
-Boolean map_inside(Map* map, Coord coord);
+Boolean map_inside(Map* map, int x, int y);
+Boolean map_inside_coord(Map* map, Coord coord);
 void    map_statistics(Map* map);
 void    map_output(Map* map, FILE* fp);
 

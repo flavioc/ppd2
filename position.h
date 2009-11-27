@@ -9,13 +9,17 @@
 typedef struct {
   Boolean is_rock;
   Object* obj;
-  ObjectList* list_start;
-  ObjectList* list_end;
+  
+  Rabbit* best_rabbit;
+  Fox* hungriest_fox;
+  Fox* oldest_fox;
+  
+  Object* free_objects[4];
+  int current_free;
 } Position;
 
-void position_add_object(Position *pos, Object* obj);
-void position_free_list(Position* pos);
-
-#define position_has_list(POS) ((POS)->list_start != NULL)
+void position_init(Position* pos);
+void position_add_free(Position* pos, Object* obj);
+void position_clean_free(Position* pos, Object* except);
 
 #endif

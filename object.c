@@ -30,23 +30,3 @@ object_new_fox(int x, int y)
 
   return ret;
 }
-
-ObjectList*
-object_new_list(Object* obj)
-{
-  ObjectList* new = (ObjectList*)malloc(sizeof(ObjectList));
-  
-  ObjectList_elem(new) = obj;
-  ObjectList_next(new) = NULL;
-  
-  return new;
-}
-
-ObjectList*
-object_add_list(ObjectList* start, Object* obj)
-{
-  ObjectList* new = object_new_list(obj);
-  ObjectList_next(start) = new;
-  
-  return new;
-}

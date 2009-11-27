@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "map.h"
 
@@ -9,6 +10,64 @@ static Map* map = NULL;
 static int ger;
 
 #define CLEAR_FREE() memset(free_pos, TRUE, sizeof(free_pos))
+
+static void
+move_fox(Position* pos, Fox* fox)
+{
+  Boolean had_rabbit = FALSE;
+  
+  if(pos->best_rabbit) {
+    had_rabbit = TRUE;
+    free(pos->best_rabbit); // libertar coelho
+    pos->best_rabbit = NULL;
+    
+    if(pos->hungriest_fox) {
+      position_add_free(pos, (Object*)pos->hungriest_fox);
+      pos->hungriest_fox = NULL;
+    }
+  } else if(pos->oldest_fox && !pos->hungriest_fox)
+    had_rabbit = TRUE;
+  
+  if(!had_rabbit) {
+    if(!pos->hungriest_fox ||
+      pos->hungriest_fox->last_food < fox->last_food)
+    {
+      if(pos->hungriest_fox)
+        position_add_free(pos, (Object*)pos->hungriest_fox);
+      pos->hungriest_fox = fox;
+    }
+  }
+  
+  if(!pos->oldest_fox ||
+    pos->oldest_fox->last_procreation < fox->last_procreation)
+  {
+    if(pos->oldest_fox)
+      position_add_free(pos, (Object*)pos->oldest_fox);
+    pos->oldest_fox = fox;
+  }
+}
+
+static void
+move_rabbit(Position* pos, Rabbit* rabbit)
+{
+  if(pos->oldest_fox) {
+    if(pos->hungriest_fox) {
+      position_add_free(pos, (Object*)pos->hungriest_fox);
+      pos->hungriest_fox = NULL;
+    }
+    pos->best_rabbit = NULL;
+    free(rabbit); // coelho não necessário
+  } else {
+    if(!pos->best_rabbit || 
+      pos->best_rabbit->last_procreation < rabbit->last_procreation)
+    {
+      if(pos->best_rabbit)
+        free(pos->best_rabbit);
+      pos->best_rabbit = rabbit;
+    } else
+      free(rabbit);
+  }
+}
 
 static void
 simulate_rabbit(Position* pos)
@@ -24,7 +83,7 @@ simulate_rabbit(Position* pos)
   for(i = 0; i < 4; ++i) {
     tmp_coord = coord_at_direction(coord, i);
     
-    if(!map_inside(map, tmp_coord)) {
+    if(!map_inside_coord(map, tmp_coord)) {
       free_pos[i] = FALSE;
       --total_free;
       continue;
@@ -45,7 +104,7 @@ simulate_rabbit(Position* pos)
   
   if(total_free == 0) {
     // não há casas livres, manter...
-    position_add_object(pos, pos->obj);
+    move_rabbit(pos, rabbit);
     return;
   }
   
@@ -70,10 +129,10 @@ simulate_rabbit(Position* pos)
     rabbit->last_procreation = 0;
     map->rabbit_reprod++;
     
-    position_add_object(pos, (Object*)object_new_rabbit(Coord_x(tmp_coord), Coord_y(tmp_coord)));
+    move_rabbit(pos, object_new_rabbit(Coord_x(tmp_coord), Coord_y(tmp_coord)));
   }
   
-  position_add_object(new_pos, (Object*)rabbit);
+  move_rabbit(new_pos, rabbit);
 }
 
 static void
@@ -85,6 +144,7 @@ simulate_fox(Position* pos)
   
   if(fox->last_food >= map->ger_alim_raposas) {
     // morreu
+    free(fox);
     return;
   }
   
@@ -103,7 +163,7 @@ simulate_fox(Position* pos)
   for(i = 0; i < 4; ++i) {
     tmp_coord = coord_at_direction(coord, i);
     
-    if(!map_inside(map, tmp_coord)) {
+    if(!map_inside_coord(map, tmp_coord)) {
       free_pos[i] = FALSE;
       --total_free;
       continue;
@@ -127,7 +187,7 @@ simulate_fox(Position* pos)
   
   if(total_free == 0) {
     // não há casas livres, manter...
-    position_add_object(pos, pos->obj);
+    move_fox(pos, fox);
     return;
   }
  
@@ -167,79 +227,33 @@ simulate_fox(Position* pos)
   
   if(fox->last_procreation >= map->ger_proc_raposas) {
     // vai procriar
-    
     fox->last_procreation = 0;
-    
-    position_add_object(pos, (Object*)object_new_fox(Coord_x(tmp_coord), Coord_y(tmp_coord)));
+    move_fox(pos, object_new_fox(Coord_x(tmp_coord), Coord_y(tmp_coord)));
   }
   
-  position_add_object(other, (Object*)fox);
+  move_fox(other, fox);
 }
 
 static void
 resolve_conflict(Position* pos)
 {
-  ObjectList* list = pos->list_start;
-  
-  Rabbit* best_rabbit = NULL;
-  Fox* oldest_fox = NULL;
-  Fox* hungriest_fox = NULL;
-  Fox* fox;
-  Rabbit *rabbit;
-  Object* obj;
-  
-  while(list) {
-    obj = ObjectList_elem(list);
+  if(pos->best_rabbit) { // so apareceram coelhos
+    pos->obj = (Object*)pos->best_rabbit;
+    pos->best_rabbit = NULL;
+  } else if(pos->hungriest_fox && pos->oldest_fox) { // so apareceram raposas
+    pos->obj = (Object*)pos->oldest_fox;
     
-    switch(obj->type) {
-      case FOX:
-        fox = (Fox*)obj;
-      
-        if(!best_rabbit)
-          if(!hungriest_fox || hungriest_fox->last_food > fox->last_food)
-            hungriest_fox = fox;
-          
-        if(!oldest_fox || oldest_fox->last_procreation > fox->last_procreation)
-          oldest_fox = fox;
-          
-      break;
-      case RABBIT:
-        if(!oldest_fox && !hungriest_fox) {
-          rabbit = (Rabbit*)obj;
-          
-          if(!best_rabbit || rabbit->last_procreation > best_rabbit->last_procreation)
-            best_rabbit = rabbit;
-        }
-      break;
-    }
+    if(pos->hungriest_fox != pos->oldest_fox)
+      position_add_free(pos, (Object*)pos->hungriest_fox);
+    position_clean_free(pos, pos->obj);
     
-    list = ObjectList_next(list);
+    pos->oldest_fox = NULL;
+    pos->hungriest_fox = NULL;
+  } else if(pos->oldest_fox) { // apareceram coelhos e raposas!
+    pos->obj = (Object*)pos->oldest_fox;
+    position_clean_free(pos, pos->obj);
+    pos->oldest_fox = NULL;
   }
-  Object* dont_remove = NULL;
-  
-  if(!oldest_fox && best_rabbit) { // no foxes, only rabbits
-    dont_remove = (Object*)best_rabbit;
-  } else if(hungriest_fox && !best_rabbit) { // only foxes
-    dont_remove = (Object*)hungriest_fox;
-  } else if(oldest_fox && best_rabbit) { // foxes and rabbits
-    dont_remove = (Object*)oldest_fox;
-    oldest_fox->last_food = 0;
-  }
-  
-  // delete other objects
-  list = pos->list_start;
-  
-  while(list) {
-    obj = ObjectList_elem(list);
-    
-    if(obj != dont_remove)
-      free(obj);
-    
-    list = ObjectList_next(list);
-  }
-  
-  if(dont_remove)
-    pos->obj = dont_remove;
 }
 
 static void
@@ -250,6 +264,8 @@ simulate_gen()
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j) {
       Position *pos = Position_at(map, i, j);
+      //printf("Current free: %d %d %d\n", i, j, pos->current_free);
+      //assert(pos->current_free == 0);
       
       if(pos->obj) {
         switch(pos->obj->type) {
@@ -268,16 +284,12 @@ simulate_gen()
     for(j = 0; j < map->col; ++j) {
       Position* pos = Position_at(map, i, j);
       
-      if(position_has_list(pos)) {
-        resolve_conflict(pos);
-      }
-    }  
+      resolve_conflict(pos);
+      assert(pos->best_rabbit == NULL);
+      assert(pos->oldest_fox == NULL);
+      assert(pos->hungriest_fox == NULL);
+    } 
   }
-  
-  // libertar listas
-  for(i = 0; i < map->lin; ++i)
-    for(j = 0; j < map->col; ++j)
-      position_free_list(Position_at(map, i, j));
 }
 
 static void
@@ -285,8 +297,8 @@ simulate()
 {
   for(ger = 0; ger < map->n_ger; ++ger) {
     simulate_gen();
-    printf("Generation %d:\n", ger + 1);
-    map_print(map);
+    //printf("Generation %d:\n", ger + 1);
+    //map_print(map);
   }
 }
 
@@ -295,7 +307,6 @@ main()
 {
   map = map_read(stdin);
   
-  printf("Map start:\n");
   map_print(map);
   
   simulate();

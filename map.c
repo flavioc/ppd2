@@ -53,27 +53,31 @@ map_read(FILE* fp)
   map->matrix = (Position*)malloc(sizeof(Position) * lin * col);
   
   for(i = 0; i < lin; ++i)
-    for(j = 0; j < col; ++j) {
-      Position *pos = Position_at(map, i, j);
-      
-      pos->list_start = pos->list_end = NULL;
-      pos->obj = NULL;
-      pos->is_rock = FALSE;
-    }
+    for(j = 0; j < col; ++j)
+      position_init(Position_at(map, i, j));
   
   char type[7];
   int x, y;
   Object* obj;
+  Position* pos;
   
   for(i = 0; i < n_objs; ++i) {
     if(fscanf(fp, "%6s %d %d", type, &x, &y) != 3) {
       map_free(map);
       return NULL;
     }
+    
     printf("Read %s %d %d\n", type, x, y);
     
+    if(!map_inside(map, x, y)) {
+      map_free(map);
+      return NULL;
+    }
+     
+    pos = Position_at(map, x, y); 
+    
     if(strcmp(type, "ROCHA") == 0) {
-      Position_at(map, x, y)->is_rock = TRUE;
+      pos->is_rock = TRUE;
       continue;
     }
     
@@ -89,7 +93,7 @@ map_read(FILE* fp)
       return NULL;
     }
     
-    Position_at(map, x, y)->obj = obj;
+    pos->obj = obj;
   }
   
   return map;
@@ -188,19 +192,16 @@ map_output(Map* map, FILE* fp)
 }
 
 Boolean
-map_inside(Map* map, Coord coord)
+map_inside_coord(Map* map, Coord coord)
 {
-  if(Coord_x(coord) < 0)
-    return FALSE;
-    
-  if(Coord_y(coord) < 0)
-    return FALSE;
-  
-  if(Coord_x(coord) >= map->lin)
-    return FALSE;
-    
-  if(Coord_y(coord) >= map->col)
-    return FALSE;
-    
-  return TRUE;
+  return map_inside(map, Coord_x(coord), Coord_y(coord));
+}
+
+Boolean
+map_inside(Map* map, int x, int y)
+{
+  return x >= 0 &&
+         y >= 0 &&
+         x < map->lin &&
+         y < map->col;
 }

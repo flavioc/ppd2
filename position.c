@@ -1,30 +1,46 @@
 
 #include <stdlib.h>
+#include <assert.h>
 
 #include "position.h"
 
 void
-position_add_object(Position *pos, Object* obj)
+position_init(Position* pos)
 {
-  if(pos->list_start) {
-    pos->list_end = object_add_list(pos->list_end, obj);
-  } else {
-    pos->list_start = pos->list_end = object_new_list(obj);
-  }
+  pos->is_rock = FALSE;
+  pos->obj = NULL;
+  pos->best_rabbit = NULL;
+  pos->hungriest_fox = NULL;
+  pos->oldest_fox = NULL;
+  pos->current_free = 0;
 }
 
 void
-position_free_list(Position* pos)
+position_add_free(Position* pos, Object* obj)
 {
-  ObjectList* list = pos->list_start;
-  ObjectList* next = NULL;
+  int i;
   
-  while(list) {
-    next = ObjectList_next(list);
-    free(list);
-    list = next;
+  for(i = 0; i < pos->current_free; ++i) {
+    if(pos->free_objects[i] == obj)
+      return;
   }
   
-  pos->list_start = NULL;
-  pos->list_end = NULL;
+  assert(i < 4);
+  pos->free_objects[i] = obj;
+  pos->current_free++;
+}
+
+void
+position_clean_free(Position* pos, Object* except)
+{
+  if(pos->current_free > 0) {
+    int i;
+  
+    for(i = 0; i < pos->current_free; ++i) {
+      if(pos->free_objects[i] != except)
+        free(pos->free_objects[i]);
+    }
+  
+    pos->current_free = 0;
+  }
 }
