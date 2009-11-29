@@ -6,6 +6,8 @@ typedef int Boolean;
 #define FALSE 0
 #define TRUE !FALSE
 
+#define ADJACENT 4
+
 typedef struct {
   int x;
   int y;

@@ -4,39 +4,39 @@
 #include <assert.h>
 
 #include "map.h"
+#include "thread.h"
 
-static Boolean free_pos[4];
 static int ger;
-
-#define CLEAR_FREE() memset(free_pos, TRUE, sizeof(free_pos))
+static ThreadData data;
 
 static void
 simulate_rabbit(Coord coord, Position* pos)
 {
   Rabbit* rabbit = (Rabbit*)pos->obj;
-  Position* tmp_pos;
-  int total_free = 4, i;
+  int i, total_free = ADJACENT;
   Coord tmp_coord;
-  
-  CLEAR_FREE();
-  
-  for(i = 0; i < 4; ++i) {
+  Position* tmp_pos;
+
+  for(i = 0; i < ADJACENT; ++i) {
     tmp_coord = coord_at_direction(coord, i);
     
     if(!map_inside_coord(map, tmp_coord)) {
-      free_pos[i] = FALSE;
+      data.free_pos[i] = FALSE;
       --total_free;
       continue;
     }
     
     // verificar se existe uma raposa ou rocha
-    tmp_pos = map_position_at_coord(map, tmp_coord);
+    tmp_pos = data.positions[i] = map_position_at_coord(map, tmp_coord);
     
     if(tmp_pos->is_rock || tmp_pos->obj)
     {
-      free_pos[i] = FALSE;
+      data.free_pos[i] = FALSE;
       --total_free;
+      continue;
     }
+    
+    data.free_pos[i] = TRUE;
   }
   
   rabbit->last_procreation++;
@@ -49,18 +49,14 @@ simulate_rabbit(Coord coord, Position* pos)
   
   // seleccionar casa a mover
   int index = (ger + Coord_x(coord) + Coord_y(coord)) % total_free;
+  int real_index;
   
-  for(i = 0; i < 4; ++i) {
-    if(free_pos[i]) {
-      if(!index) {
-        tmp_coord = coord_at_direction(coord, i);
+  for(i = 0; i < ADJACENT; ++i)
+    if(data.free_pos[i])
+      if(!index--) {
+        real_index = i;
         break;
       }
-      --index;
-    }
-  }
-  
-  Position* new_pos = map_position_at_coord(map, tmp_coord);
   
   if(rabbit->last_procreation >= map->ger_proc_coelhos) {
     // vai reproduzir-se...
@@ -68,10 +64,10 @@ simulate_rabbit(Coord coord, Position* pos)
     rabbit->last_procreation = 0;
     map_rabbit_reprod_inc(map, 1);
     
-    position_move_rabbit(pos, object_new_rabbit(Coord_x(tmp_coord), Coord_y(tmp_coord)));
+    position_move_rabbit(pos, object_new_rabbit());
   }
   
-  position_move_rabbit(new_pos, rabbit);
+  position_move_rabbit(data.positions[real_index], rabbit);
 }
 
 static void
@@ -90,38 +86,40 @@ simulate_fox(Coord coord, Position* pos)
   
   fox->last_procreation++;
   
+  int i, total_free = ADJACENT, rabbits = 0;
   Coord tmp_coord;
-  int i, total_free = 4, rabbits = 0;
-  Boolean with_rabbits[4];
   Position* tmp_pos;
   
-  memset(with_rabbits, FALSE, sizeof(with_rabbits));
-  
-  CLEAR_FREE();
-  
-  for(i = 0; i < 4; ++i) {
+  for(i = 0; i < ADJACENT; ++i) {
     tmp_coord = coord_at_direction(coord, i);
     
     if(!map_inside_coord(map, tmp_coord)) {
-      free_pos[i] = FALSE;
+      data.free_pos[i] = FALSE;
       --total_free;
+      data.with_rabbits[i] = FALSE;
       continue;
     }
     
-    tmp_pos = map_position_at_coord(map, tmp_coord);
+    tmp_pos = data.positions[i] = map_position_at_coord(map, tmp_coord);
     
     if(tmp_pos->is_rock ||
       (tmp_pos->obj && tmp_pos->obj->type == FOX))
     {
-      free_pos[i] = FALSE;
+      data.free_pos[i] = FALSE;
       --total_free;
+      data.with_rabbits[i] = FALSE;
       continue;
     }
     
     if(tmp_pos->obj && tmp_pos->obj->type == RABBIT) {
-      with_rabbits[i] = TRUE;
+      data.with_rabbits[i] = TRUE;
+      // no need to set free_pos here...
       ++rabbits;
+      continue;
     }
+    
+    data.free_pos[i] = TRUE;
+    data.with_rabbits[i] = FALSE;
   }
   
   if(total_free == 0) {
@@ -130,48 +128,32 @@ simulate_fox(Coord coord, Position* pos)
     return;
   }
  
-  Position* other;
-  int index;
+  int real_index, index = ger + Coord_x(coord) + Coord_y(coord);
+  Boolean *bool_array;
  
   if(rabbits > 0) {
-    // escolher uma casa com coelho
-    index = (ger + Coord_x(coord) + Coord_y(coord)) % rabbits;
-   
-    for(i = 0; i <= 4; ++i) {
-      if(with_rabbits[i]) {
-        if(!index) {
-          tmp_coord = coord_at_direction(coord, i);
-          break;
-        }
-       
-        --index;
-      }
-    }
+    index %= rabbits;
+    bool_array = data.with_rabbits;
   } else {
-    index = (ger + Coord_x(coord) + Coord_y(coord)) % total_free;
-    
-    for(i = 0; i <= 4; ++i) {
-      if(free_pos[i]) {
-        if(!index) {
-          tmp_coord = coord_at_direction(coord, i);
-          break;
-        }
-        
-        --index;
-      }
-    }
+    bool_array = data.free_pos;
+    index %= total_free;
   }
   
-  other = map_position_at_coord(map, tmp_coord);
+  for(i = 0; i < ADJACENT; ++i)
+    if(bool_array[i])
+      if(!index--) {
+        real_index = i;
+        break;
+      }
   
   if(fox->last_procreation >= map->ger_proc_raposas) {
     // vai procriar
     fox->last_procreation = 0;
     map_fox_reprod_inc(map, 1);
-    position_move_fox(pos, object_new_fox(Coord_x(tmp_coord), Coord_y(tmp_coord)));
+    position_move_fox(pos, object_new_fox());
   }
   
-  position_move_fox(other, fox);
+  position_move_fox(data.positions[real_index], fox);
 }
 
 static void

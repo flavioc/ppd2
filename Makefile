@@ -2,7 +2,7 @@
 LDFLAGS = -lpthread
 CFLAGS = -Wall -Wextra -g3
 
-OBJS = utils.o map.o object.o position.o
+OBJS = utils.o map.o object.o position.o thread.o
 BINS = seq simulator
 
 all: $(OBJS) $(BINS)
@@ -19,6 +19,7 @@ utils.o: utils.c utils.h
 map.o: map.c map.h
 object.o: object.c object.h
 position.o: position.c position.h
+thread.o: thread.c thread.h
 
 clean:
 	rm -f $(BINS) *.o
