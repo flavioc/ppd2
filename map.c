@@ -54,6 +54,10 @@ map_read(FILE* fp)
   map->fox_reprod = 0;
   map->rabbit_deaths = 0;
   map->fox_deaths = 0;
+  pthread_mutex_init(&map->mtx_rabbit_deaths, NULL);
+  pthread_mutex_init(&map->mtx_fox_deaths, NULL);
+  pthread_mutex_init(&map->mtx_rabbit_reprod, NULL);
+  pthread_mutex_init(&map->mtx_fox_reprod, NULL);
   map->matrix = (Position*)malloc(sizeof(Position) * lin * col);
   
   for(i = 0; i < lin; ++i)
