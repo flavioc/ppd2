@@ -16,6 +16,11 @@ typedef struct {
   int lin;
   int col;
   
+  pthread_mutex_t mtx_rabbit_deaths;
+  pthread_mutex_t mtx_fox_deaths;
+  pthread_mutex_t mtx_rabbit_reprod;
+  pthread_mutex_t mtx_fox_reprod;
+  
   int rabbit_reprod;
   int fox_reprod;
   int rabbit_deaths;
@@ -24,8 +29,18 @@ typedef struct {
   Position *matrix;
 } Map;
 
-#define Position_at(MAP, X, Y) ((MAP)->matrix + (X) * (MAP)->col + (Y))
-#define Position_at_coord(MAP, COORD) Position_at(MAP, Coord_x(COORD), Coord_y(COORD))
+#define map_position_at(MAP, X, Y) ((MAP)->matrix + (X) * (MAP)->col + (Y))
+#define map_position_at_coord(MAP, COORD) map_position_at(MAP, Coord_x(COORD), Coord_y(COORD))
+#define map_stat_inc(MAP, STAT, VAL)         \
+  {                                          \
+    pthread_mutex_lock(&(MAP)->mtx_##STAT);   \
+    (MAP)->STAT += VAL;                     \
+    pthread_mutex_unlock(&(MAP)->mtx_##STAT); \
+  }
+#define map_rabbit_death_inc(MAP, VAL) map_stat_inc(MAP, rabbit_deaths, VAL)
+#define map_rabbit_reprod_inc(MAP, VAL) map_stat_inc(MAP, rabbit_reprod, VAL)
+#define map_fox_death_inc(MAP, VAL) map_stat_inc(MAP, fox_deaths, VAL)
+#define map_fox_reprod_inc(MAP, VAL) map_stat_inc(MAP, fox_reprod, VAL)
 
 Map*    map_read(FILE *fp);
 void    map_print(Map* map);
@@ -34,5 +49,7 @@ Boolean map_inside(Map* map, int x, int y);
 Boolean map_inside_coord(Map* map, Coord coord);
 void    map_statistics(Map* map);
 void    map_output(Map* map, FILE* fp);
+
+extern Map* map;
 
 #endif

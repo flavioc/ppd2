@@ -4,6 +4,8 @@
 
 #include "map.h"
 
+Map* map = NULL;
+
 void
 map_free(Map* map)
 {
@@ -13,7 +15,7 @@ map_free(Map* map)
   int i, j;
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j) {
-      Position *pos = Position_at(map, i, j);
+      Position *pos = map_position_at(map, i, j);
       
       if(pos && pos->obj)
         free(pos->obj);
@@ -56,7 +58,7 @@ map_read(FILE* fp)
   
   for(i = 0; i < lin; ++i)
     for(j = 0; j < col; ++j)
-      position_init(Position_at(map, i, j));
+      position_init(map_position_at(map, i, j));
   
   char type[7];
   int x, y;
@@ -76,7 +78,7 @@ map_read(FILE* fp)
       return NULL;
     }
      
-    pos = Position_at(map, x, y); 
+    pos = map_position_at(map, x, y); 
     
     if(strcmp(type, "ROCHA") == 0) {
       pos->is_rock = TRUE;
@@ -122,7 +124,7 @@ map_print(Map* map)
   for(i = 0; i < map->lin; ++i) {
     printf("|");
     for(j = 0; j < map->col; ++j) {
-      Position *pos = Position_at(map, i, j);
+      Position *pos = map_position_at(map, i, j);
       
       if(pos->is_rock) {
         printf("-");
@@ -155,7 +157,7 @@ map_statistics(Map* map)
   
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j) {
-      Position* pos = Position_at(map, i, j);
+      Position* pos = map_position_at(map, i, j);
       
       if(pos->obj) {
         switch(pos->obj->type) {
@@ -181,7 +183,7 @@ map_output(Map* map, FILE* fp)
   
   for(i = 0; i < map->lin; ++i) {
     for(j = 0; j < map->col; ++j) {
-      Position* pos = Position_at(map, i, j);
+      Position* pos = map_position_at(map, i, j);
       
       if(pos->is_rock)
         fprintf(fp, "ROCHA %d %d\n", i, j);

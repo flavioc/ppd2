@@ -3,7 +3,6 @@
 
 #include "map.h"
 
-static Map* map = NULL;
 static int nthreads = 4;
 
 int
