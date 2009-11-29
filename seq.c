@@ -32,8 +32,7 @@ simulate_rabbit(Coord coord, Position* pos)
     // verificar se existe uma raposa ou rocha
     tmp_pos = map_position_at_coord(map, tmp_coord);
     
-    if(tmp_pos->is_rock ||
-      (tmp_pos->obj && tmp_pos->obj->type == FOX))
+    if(tmp_pos->is_rock || tmp_pos->obj)
     {
       free_pos[i] = FALSE;
       --total_free;
@@ -210,9 +209,6 @@ simulate_gen()
       
       Coord_x(coord) = i;
       Coord_y(coord) = j;
-      
-      //printf("Current free: %d %d %d\n", i, j, pos->current_free);
-      //assert(pos->current_free == 0);
       
       if(pos->obj) {
         switch(pos->obj->type) {
