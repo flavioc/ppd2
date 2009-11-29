@@ -221,8 +221,6 @@ simulate_gen()
           case FOX:
             simulate_fox(coord, pos); break;
         }
-        
-        pos->obj = NULL;
       }
     }
   
@@ -230,7 +228,8 @@ simulate_gen()
   for(i = 0; i < map->lin; ++i) {
     for(j = 0; j < map->col; ++j) {
       Position* pos = map_position_at(map, i, j);
-      
+  
+      pos->obj = NULL;
       resolve_conflict(pos);
       assert(pos->best_rabbit == NULL);
       assert(pos->oldest_fox == NULL);
