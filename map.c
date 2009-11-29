@@ -11,18 +11,33 @@ map_free(Map* map)
 {
   if(!map)
     return;
-    
-  int i, j;
-  for(i = 0; i < map->lin; ++i)
-    for(j = 0; j < map->col; ++j) {
-      Position *pos = map_position_at(map, i, j);
-      
-      if(pos && pos->obj)
-        free(pos->obj);
-    }
   
-  if(map->matrix)
+  if(map->matrix) {  
+    int i, j;
+    for(i = 0; i < map->lin; ++i)
+      for(j = 0; j < map->col; ++j) {
+        Position *pos = map_position_at(map, i, j);
+      
+        if(pos)
+          position_free(pos);
+      }
+  
     free(map->matrix);
+  }
+  
+  if(map->rows_ger_first_pass)
+    free(map->rows_ger_first_pass);
+    
+  if(map->rows_ger_second_pass)
+    free(map->rows_ger_second_pass);
+    
+  pthread_mutex_destroy(&map->mtx_rabbit_deaths);
+  pthread_mutex_destroy(&map->mtx_fox_deaths);
+  pthread_mutex_destroy(&map->mtx_rabbit_reprod);
+  pthread_mutex_destroy(&map->mtx_fox_reprod);
+  
+  pthread_mutex_destroy(&map->mutex);
+  pthread_cond_destroy(&map->cond);
     
   free(map);
 }
@@ -44,6 +59,7 @@ map_read(FILE* fp)
   int i, j;
   Map* map = (Map*)malloc(sizeof(Map));
   
+  /* map initialization */
   map->ger_proc_coelhos = ger_proc_coelhos;
   map->ger_proc_raposas = ger_proc_raposas;
   map->ger_alim_raposas = ger_alim_raposas;
@@ -58,11 +74,30 @@ map_read(FILE* fp)
   pthread_mutex_init(&map->mtx_fox_deaths, NULL);
   pthread_mutex_init(&map->mtx_rabbit_reprod, NULL);
   pthread_mutex_init(&map->mtx_fox_reprod, NULL);
+  
+  map->next_row_first_pass = 0;
+  map->next_row_second_pass = 0;
+  map->rows_ger_first_pass = (int*)malloc(sizeof(int)*map->lin);
+  map->rows_ger_second_pass = (int*)malloc(sizeof(int)*map->lin);
+  
+  for(i = 0; i < map->lin; ++i) {
+    map->rows_ger_first_pass[i] = 0;
+    map->rows_ger_second_pass[i] = 0;
+  }
+  
+  map->proceed_first_pass = TRUE;
+  map->proceed_second_pass = FALSE;
+  map->the_end = FALSE;
+  
+  pthread_mutex_init(&map->mutex, NULL);
+  pthread_cond_init(&map->cond, NULL);
+  
   map->matrix = (Position*)malloc(sizeof(Position) * lin * col);
   
   for(i = 0; i < lin; ++i)
     for(j = 0; j < col; ++j)
       position_init(map_position_at(map, i, j));
+  /* end of map initialization */
   
   char type[7];
   int x, y;
@@ -213,4 +248,10 @@ map_inside(Map* map, int x, int y)
          y >= 0 &&
          x < map->lin &&
          y < map->col;
+}
+
+int
+map_next_row(Map* map, int row)
+{
+  return (row + 1) % map->lin;
 }

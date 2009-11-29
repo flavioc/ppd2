@@ -16,11 +16,23 @@ typedef struct {
   int lin;
   int col;
   
+  int next_row_first_pass;
+  int next_row_second_pass;
+  int* rows_ger_first_pass;
+  int* rows_ger_second_pass;
+  Boolean proceed_first_pass;
+  Boolean proceed_second_pass;
+  Boolean the_end;
+  
+  // main mutex and condition variable
+  pthread_mutex_t mutex;
+  pthread_cond_t cond;
+  
+  // stats stuff
   pthread_mutex_t mtx_rabbit_deaths;
   pthread_mutex_t mtx_fox_deaths;
   pthread_mutex_t mtx_rabbit_reprod;
   pthread_mutex_t mtx_fox_reprod;
-  
   int rabbit_reprod;
   int fox_reprod;
   int rabbit_deaths;
@@ -47,6 +59,7 @@ void    map_print(Map* map);
 void    map_free(Map* map);
 Boolean map_inside(Map* map, int x, int y);
 Boolean map_inside_coord(Map* map, Coord coord);
+int     map_next_row(Map* map, int row);
 void    map_statistics(Map* map);
 void    map_output(Map* map, FILE* fp);
 

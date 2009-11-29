@@ -18,6 +18,15 @@ position_init(Position* pos)
 }
 
 void
+position_free(Position* pos)
+{
+  if(pos->obj)
+    free(pos->obj);
+  
+  pthread_mutex_destroy(&pos->mutex);
+}
+
+void
 position_add_free(Position* pos, Object* obj)
 {
   int i;

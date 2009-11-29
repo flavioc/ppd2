@@ -6,7 +6,8 @@
 #ifdef MULTITHREAD
 #include "pthread.h"
 
-#define LINE_PER_THREAD 2
+#define LINES_PER_THREAD_FIRST_PASS 2
+#define LINES_PER_THREAD_SECOND_PASS 2
 #endif
 
 #endif
