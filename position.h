@@ -20,6 +20,6 @@ typedef struct {
 
 void position_init(Position* pos);
 void position_add_free(Position* pos, Object* obj);
-void position_clean_free(Position* pos, Object* except);
+int  position_clean_free(Position* pos, Object* except);
 
 #endif

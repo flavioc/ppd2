@@ -17,7 +17,9 @@ typedef struct {
   int col;
   
   int rabbit_reprod;
-  int rabbit_collision;
+  int fox_reprod;
+  int rabbit_deaths;
+  int fox_deaths;
 
   Position *matrix;
 } Map;

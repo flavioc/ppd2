@@ -49,7 +49,9 @@ map_read(FILE* fp)
   map->lin = lin;
   map->col = col;
   map->rabbit_reprod = 0;
-  map->rabbit_collision = 0;
+  map->fox_reprod = 0;
+  map->rabbit_deaths = 0;
+  map->fox_deaths = 0;
   map->matrix = (Position*)malloc(sizeof(Position) * lin * col);
   
   for(i = 0; i < lin; ++i)
@@ -165,7 +167,8 @@ map_statistics(Map* map)
     
   printf("===================================\n");
   printf("  || FOXES: %d\tRABBITS: %d\n", total_foxes, total_rabbits);
-  printf("  || RABBIT: +%d  -%d\n", map->rabbit_reprod, map->rabbit_collision);
+  printf("  || RABBIT: +%d  -%d\n", map->rabbit_reprod, map->rabbit_deaths);
+  printf("  || FOX: %d  -%d\n", map->fox_reprod, map->fox_deaths);
   printf("===================================\n");
 }
 

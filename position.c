@@ -30,17 +30,23 @@ position_add_free(Position* pos, Object* obj)
   pos->current_free++;
 }
 
-void
+int
 position_clean_free(Position* pos, Object* except)
 {
   if(pos->current_free > 0) {
-    int i;
+    int i, total = 0;
   
     for(i = 0; i < pos->current_free; ++i) {
-      if(pos->free_objects[i] != except)
+      if(pos->free_objects[i] != except) {
         free(pos->free_objects[i]);
+        ++total;
+      }
     }
   
     pos->current_free = 0;
+    
+    return total;
   }
+  
+  return 0;
 }

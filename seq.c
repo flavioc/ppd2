@@ -18,7 +18,9 @@ move_fox(Position* pos, Fox* fox)
   
   if(pos->best_rabbit) {
     had_rabbit = TRUE;
+    
     free(pos->best_rabbit); // libertar coelho
+    map->rabbit_deaths++;
     pos->best_rabbit = NULL;
     
     if(pos->hungriest_fox) {
@@ -57,15 +59,22 @@ move_rabbit(Position* pos, Rabbit* rabbit)
     }
     pos->best_rabbit = NULL;
     free(rabbit); // coelho não necessário
+    map->rabbit_deaths++;
   } else {
+    Rabbit *tokill = NULL;
+    
     if(!pos->best_rabbit || 
       pos->best_rabbit->last_procreation < rabbit->last_procreation)
     {
       if(pos->best_rabbit)
-        free(pos->best_rabbit);
+        tokill = pos->best_rabbit;
       pos->best_rabbit = rabbit;
     } else
-      free(rabbit);
+      tokill = rabbit;
+    if(tokill) {
+      map->rabbit_deaths++;
+      free(tokill);
+    }
   }
 }
 
@@ -145,6 +154,7 @@ simulate_fox(Position* pos)
   if(fox->last_food >= map->ger_alim_raposas) {
     // morreu
     free(fox);
+    map->fox_deaths++;
     return;
   }
   
@@ -228,6 +238,7 @@ simulate_fox(Position* pos)
   if(fox->last_procreation >= map->ger_proc_raposas) {
     // vai procriar
     fox->last_procreation = 0;
+    map->fox_reprod++;
     move_fox(pos, object_new_fox(Coord_x(tmp_coord), Coord_y(tmp_coord)));
   }
   
@@ -245,13 +256,14 @@ resolve_conflict(Position* pos)
     
     if(pos->hungriest_fox != pos->oldest_fox)
       position_add_free(pos, (Object*)pos->hungriest_fox);
-    position_clean_free(pos, pos->obj);
+    
+    map->fox_deaths += position_clean_free(pos, pos->obj);
     
     pos->oldest_fox = NULL;
     pos->hungriest_fox = NULL;
   } else if(pos->oldest_fox) { // apareceram coelhos e raposas!
     pos->obj = (Object*)pos->oldest_fox;
-    position_clean_free(pos, pos->obj);
+    map->fox_deaths += position_clean_free(pos, pos->obj);
     pos->oldest_fox = NULL;
   }
 }
