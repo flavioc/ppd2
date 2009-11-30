@@ -23,6 +23,7 @@ typedef struct {
   Boolean proceed_first_pass;
   Boolean proceed_second_pass;
   Boolean the_end;
+  Boolean more_first_pass;
   
   // main mutex and condition variable
   pthread_mutex_t mutex;
@@ -59,7 +60,7 @@ void    map_print(Map* map);
 void    map_free(Map* map);
 Boolean map_inside(Map* map, int x, int y);
 Boolean map_inside_coord(Map* map, Coord coord);
-int     map_next_row(Map* map, int row);
+int     map_next_row(Map* map, int row, int inc);
 void    map_statistics(Map* map);
 void    map_output(Map* map, FILE* fp);
 

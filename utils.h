@@ -24,5 +24,6 @@ typedef enum {
 } Direction;
   
 Coord coord_at_direction(Coord coord, Direction dir);  
-  
+
+#define min(A, B) ((A) < (B) ? (A) : (B)) 
 #endif

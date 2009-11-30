@@ -88,6 +88,7 @@ map_read(FILE* fp)
   map->proceed_first_pass = TRUE;
   map->proceed_second_pass = FALSE;
   map->the_end = FALSE;
+  map->more_first_pass = TRUE;
   
   pthread_mutex_init(&map->mutex, NULL);
   pthread_cond_init(&map->cond, NULL);
@@ -109,8 +110,6 @@ map_read(FILE* fp)
       map_free(map);
       return NULL;
     }
-    
-    printf("Read %s %d %d\n", type, x, y);
     
     if(!map_inside(map, x, y)) {
       map_free(map);
@@ -251,7 +250,7 @@ map_inside(Map* map, int x, int y)
 }
 
 int
-map_next_row(Map* map, int row)
+map_next_row(Map* map, int row, int inc)
 {
-  return (row + 1) % map->lin;
+  return (row + inc) % map->lin;
 }

@@ -5,14 +5,17 @@
 
 #include "utils.h"
 #include "position.h"
+#include "map.h"
 
 typedef struct {
   Boolean free_pos[ADJACENT];
   Boolean with_rabbits[ADJACENT];
   Position* positions[ADJACENT];
-  
-  int first_pass_lines[LINES_PER_THREAD_FIRST_PASS];
-  int second_pass_lines[LINES_PER_THREAD_SECOND_PASS];
 } ThreadData;
+
+void thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger);
+void thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger);
+void thread_simulate_position(ThreadData* data, Position* pos, Coord coord, int ger);
+void thread_resolve_conflict(Map* map, Position* pos);
 
 #endif
