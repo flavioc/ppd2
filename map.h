@@ -35,7 +35,7 @@ typedef struct {
   Position *matrix;
 } Map;
 
-#define map_position_at(MAP, X, Y) ((MAP)->matrix + (X) * (MAP)->col + (Y))
+#define map_position_at(MAP, X, Y) ((MAP)->matrix + ((X) * (MAP)->col) + (Y))
 #define map_position_at_coord(MAP, COORD) map_position_at(MAP, Coord_x(COORD), Coord_y(COORD))
 
 Map*    map_read(FILE *fp);
@@ -48,7 +48,5 @@ void    map_statistics(Map* map);
 void    map_output(Map* map, FILE* fp);
 Map*    map_generate(int rows, int cols, int ger_proc_coelhos, int ger_proc_raposas, int ger_alim_raposas, int n_ger, int density);
 void    map_write(Map* map, FILE* fp);
-
-extern Map* map;
 
 #endif

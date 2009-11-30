@@ -13,9 +13,7 @@ typedef struct {
   Position* positions[ADJACENT];
 } ThreadData;
 
-void thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger);
-void thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger);
-void thread_simulate_position(ThreadData* data, Position* pos, Coord coord, int ger);
+void thread_simulate_position(ThreadData* data, Map* map, Position* pos, Coord coord, int ger);
 void thread_resolve_conflict(Position* pos);
 
 #endif

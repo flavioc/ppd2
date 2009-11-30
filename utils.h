@@ -13,8 +13,8 @@ typedef struct {
   int y;
 } Coord;
 
-#define Coord_x(COORD) (COORD).x
-#define Coord_y(COORD) (COORD).y
+#define Coord_x(COORD) ((COORD).x)
+#define Coord_y(COORD) ((COORD).y)
 
 typedef enum {
   DIR_UP,

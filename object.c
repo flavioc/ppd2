@@ -4,7 +4,7 @@
 #include "object.h"
 
 Rabbit*
-object_new_rabbit()
+object_new_rabbit(void)
 {
   Rabbit* ret = (Rabbit*)malloc(sizeof(Rabbit));
 
@@ -15,7 +15,7 @@ object_new_rabbit()
 }
 
 Fox*
-object_new_fox()
+object_new_fox(void)
 {
   Fox* ret = (Fox*)malloc(sizeof(Fox));
 

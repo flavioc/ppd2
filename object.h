@@ -23,10 +23,10 @@ typedef struct {
   int last_food;
 } Fox;
 
-#define Object_type(OBJ) (OBJ)->comm.type
-#define Object_coord(OBJ) (OBJ)->comm.coord
+#define Object_type(OBJ) ((OBJ)->comm.type)
+#define Object_coord(OBJ) ((OBJ)->comm.coord)
 
-Rabbit*     object_new_rabbit();
-Fox*        object_new_fox();
+Rabbit*     object_new_rabbit(void);
+Fox*        object_new_fox(void);
 
 #endif

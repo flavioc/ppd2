@@ -1,5 +1,6 @@
 
 #include <time.h>
+#include <stdlib.h>
 
 #include "utils.h"
 
@@ -32,11 +33,11 @@ coord_at_direction(Coord coord, Direction dir)
   return ret;
 }
 
+static Boolean first_srand = TRUE;
+
 int
 generate_random(int max)
 {
-  static Boolean first_srand = TRUE;
-  
   if(first_srand) {
     first_srand = FALSE;
     srand((unsigned int)time(NULL));

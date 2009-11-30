@@ -24,7 +24,7 @@ typedef struct {
 void position_init(Position* pos);
 void position_free(Position* pos);
 void position_add_free(Position* pos, Object* obj);
-int  position_clean_free(Position* pos, Object* except);
+void position_clean_free(Position* pos, Object* except);
 void position_move_fox(Position* pos, Fox* fox);
 void position_move_rabbit(Position* pos, Rabbit* rabbit);
 

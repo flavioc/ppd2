@@ -1,14 +1,15 @@
 
-#include "thread.h"
-#include "map.h"
+#include <assert.h>
 
-void
-thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger)
+#include "thread.h"
+
+static void
+thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, int ger)
 {
   Rabbit* rabbit = (Rabbit*)pos->obj;
   int i, total_free = ADJACENT;
   Coord tmp_coord;
-  Position* tmp_pos;
+  Position* tmp_pos = NULL;
 
   for(i = 0; i < ADJACENT; ++i) {
     tmp_coord = coord_at_direction(coord, i);
@@ -42,7 +43,7 @@ thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger)
   
   // seleccionar casa a mover
   int index = (ger + Coord_x(coord) + Coord_y(coord)) % total_free;
-  int real_index;
+  int real_index = -1;
   
   for(i = 0; i < ADJACENT; ++i)
     if(data->free_pos[i])
@@ -50,6 +51,8 @@ thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger)
         real_index = i;
         break;
       }
+      
+  assert(real_index != -1);
   
   if(rabbit->last_procreation >= map->ger_proc_coelhos) {
     // vai reproduzir-se...
@@ -62,8 +65,8 @@ thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger)
   position_move_rabbit(data->positions[real_index], rabbit);
 }
 
-void
-thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
+static void
+thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int ger)
 {
   Fox* fox = (Fox*)pos->obj;
   
@@ -80,6 +83,9 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
   int i, total_free = ADJACENT, rabbits = 0;
   Coord tmp_coord;
   Position* tmp_pos;
+  
+  for(i = 0; i < ADJACENT; ++i)
+    data->free_pos[i] = FALSE;
   
   for(i = 0; i < ADJACENT; ++i) {
     tmp_coord = coord_at_direction(coord, i);
@@ -104,6 +110,7 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
     
     if(tmp_pos->obj && tmp_pos->obj->type == RABBIT) {
       data->with_rabbits[i] = TRUE;
+      data->free_pos[i] = TRUE;
       // no need to set free_pos here...
       ++rabbits;
       continue;
@@ -119,8 +126,8 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
     return;
   }
  
-  int real_index, index = ger + Coord_x(coord) + Coord_y(coord);
-  Boolean *bool_array;
+  int real_index = -1, index = ger + Coord_x(coord) + Coord_y(coord);
+  Boolean *bool_array = NULL;
  
   if(rabbits > 0) {
     index %= rabbits;
@@ -130,12 +137,16 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
     index %= total_free;
   }
   
+  assert(bool_array != NULL);
+  
   for(i = 0; i < ADJACENT; ++i)
     if(bool_array[i])
       if(!index--) {
         real_index = i;
         break;
       }
+      
+  assert(real_index != -1);
   
   if(fox->last_procreation >= map->ger_proc_raposas) {
     // vai procriar
@@ -147,21 +158,23 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
 }
 
 void
-thread_simulate_position(ThreadData* data, Position* pos, Coord coord, int ger)
+thread_simulate_position(ThreadData* data, Map* map, Position* pos, Coord coord, int ger)
 {
   if(pos->obj) {
-    switch(pos->obj->type) {
-      case RABBIT:
-        thread_simulate_rabbit(data, coord, pos, ger); break;
-      case FOX:
-        thread_simulate_fox(data, coord, pos, ger); break;
-    }
+    if(pos->obj->type == RABBIT)
+      thread_simulate_rabbit(data, map, coord, pos, ger);
+    if(pos->obj->type == FOX)
+      thread_simulate_fox(data, map, coord, pos, ger);
   }
+  
+  //printf("A simular %d %d na geração %d\n", Coord_x(coord), Coord_y(coord), ger);
 }
 
 void
 thread_resolve_conflict(Position* pos)
 {
+  assert(pos != NULL);
+  
   pos->obj = NULL;
   
   if(pos->best_rabbit) { // so apareceram coelhos
@@ -182,4 +195,8 @@ thread_resolve_conflict(Position* pos)
     position_clean_free(pos, pos->obj);
     pos->oldest_fox = NULL;
   }
+  
+  assert(pos->best_rabbit == NULL);
+  assert(pos->hungriest_fox == NULL);
+  assert(pos->oldest_fox == NULL);
 }

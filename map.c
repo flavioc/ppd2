@@ -4,8 +4,6 @@
 
 #include "map.h"
 
-Map* map = NULL;
-
 void
 map_free(Map* map)
 {
@@ -119,9 +117,9 @@ map_read(FILE* fp)
     }
     
     if(strcmp(type, "RAPOSA") == 0)
-      obj = (Object*)object_new_fox(x, y);
+      obj = (Object*)object_new_fox();
     else if(strcmp(type, "COELHO") == 0)
-      obj = (Object*)object_new_rabbit(x, y);
+      obj = (Object*)object_new_rabbit();
     else
       obj = NULL;
       
@@ -151,13 +149,14 @@ void
 map_print(Map* map)
 {
   int i, j;
+  Position* pos;
   
   print_line(map->col + 2);
   
   for(i = 0; i < map->lin; ++i) {
     printf("|");
     for(j = 0; j < map->col; ++j) {
-      Position *pos = map_position_at(map, i, j);
+      pos = map_position_at(map, i, j);
       
       if(pos->is_rock) {
         printf("-");
@@ -183,10 +182,8 @@ map_print(Map* map)
 void
 map_statistics(Map* map)
 {
-  int total_rabbits, total_foxes;
+  int total_rabbits = 0, total_foxes = 0;
   int i, j;
-  
-  total_rabbits = total_foxes = 0;
   
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j) {
