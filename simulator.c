@@ -13,8 +13,8 @@ static ThreadData* thread_data;
 
 //#define DEBUG
 
-static int LINES_PER_THREAD_FIRST_PASS = 100;
-static int LINES_PER_THREAD_SECOND_PASS = 99;
+static int LINES_PER_THREAD_FIRST_PASS = 5;
+static int LINES_PER_THREAD_SECOND_PASS = 4;
 
 #define MAIN_LOCK pthread_mutex_lock(&map->mutex)
 #define MAIN_UNLOCK pthread_mutex_unlock(&map->mutex)
@@ -140,7 +140,7 @@ run_thread(THREAD_PARAM arg)
         map->more_first_pass = FALSE;
       else
         update_first_pass();
-        
+      
       MAIN_UNLOCK;
     }
     
@@ -167,12 +167,13 @@ run_thread(THREAD_PARAM arg)
 
       if(map->the_end)
         break;
+        
+      if(!map->more_second_pass)
+        continue;
       
-      if(map->more_second_pass) {
-        MAIN_LOCK;
-        update_second_pass();
-        MAIN_UNLOCK;
-      }
+      MAIN_LOCK;
+      update_second_pass();
+      MAIN_UNLOCK;
       
     } else { // !got_first_not_second
 #ifdef DEBUG
