@@ -23,11 +23,10 @@ simulate_gen(int ger)
       thread_simulate_position(&data, map_position_at(map, i, j), coord, ger);
     }
   
-  // resolver conflitos
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j) {
       pos = map_position_at(map, i, j);
-      thread_resolve_conflict(map, pos);
+      thread_resolve_conflict(pos);
     } 
 }
 
@@ -46,11 +45,10 @@ main()
 {
   map = map_read(stdin);
   
-  //map_print(map);
+  map_print(map);
   
   simulate();
   
-  printf("Map end:\n");
   map_print(map);
   //map_statistics(map);
   //map_output(map, stdout);

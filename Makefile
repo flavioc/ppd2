@@ -3,7 +3,7 @@ LDFLAGS = -lpthread
 CFLAGS = -Wall -Wextra -g3
 
 OBJS = utils.o map.o object.o position.o thread.o
-BINS = seq simulator
+BINS = seq simulator generator
 
 all: $(OBJS) $(BINS)
 
@@ -12,6 +12,9 @@ seq: seq.o $(OBJS)
 
 simulator: simulator.o $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) simulator.o -o simulator
+
+generator: generator.o $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) generator.o -o generator
 
 seq.o: seq.c
 simulator.o: simulator.c

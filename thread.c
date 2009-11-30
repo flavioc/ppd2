@@ -55,7 +55,6 @@ thread_simulate_rabbit(ThreadData* data, Coord coord, Position* pos, int ger)
     // vai reproduzir-se...
     
     rabbit->last_procreation = 0;
-    map_rabbit_reprod_inc(map, 1);
     
     position_move_rabbit(pos, object_new_rabbit());
   }
@@ -73,7 +72,6 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
   if(fox->last_food >= map->ger_alim_raposas) {
     // morreu
     free(fox);
-    map_fox_death_inc(map, 1);
     return;
   }
   
@@ -142,7 +140,6 @@ thread_simulate_fox(ThreadData* data, Coord coord, Position* pos, int ger)
   if(fox->last_procreation >= map->ger_proc_raposas) {
     // vai procriar
     fox->last_procreation = 0;
-    map_fox_reprod_inc(map, 1);
     position_move_fox(pos, object_new_fox());
   }
   
@@ -163,7 +160,7 @@ thread_simulate_position(ThreadData* data, Position* pos, Coord coord, int ger)
 }
 
 void
-thread_resolve_conflict(Map* map, Position* pos)
+thread_resolve_conflict(Position* pos)
 {
   pos->obj = NULL;
   
@@ -176,13 +173,13 @@ thread_resolve_conflict(Map* map, Position* pos)
     if(pos->hungriest_fox != pos->oldest_fox)
       position_add_free(pos, (Object*)pos->hungriest_fox);
     
-    map_fox_death_inc(map, position_clean_free(pos, pos->obj));
+    position_clean_free(pos, pos->obj);
     
     pos->oldest_fox = NULL;
     pos->hungriest_fox = NULL;
   } else if(pos->oldest_fox) { // apareceram coelhos e raposas!
     pos->obj = (Object*)pos->oldest_fox;
-    map_fox_death_inc(map, position_clean_free(pos, pos->obj));
+    position_clean_free(pos, pos->obj);
     pos->oldest_fox = NULL;
   }
 }

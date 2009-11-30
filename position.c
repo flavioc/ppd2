@@ -73,7 +73,6 @@ position_move_fox(Position* pos, Fox* fox)
     had_rabbit = TRUE;
     
     free(pos->best_rabbit); // libertar coelho
-    map_rabbit_death_inc(map, 1);
     pos->best_rabbit = NULL;
     
     if(pos->hungriest_fox) {
@@ -116,7 +115,6 @@ position_move_rabbit(Position* pos, Rabbit* rabbit)
     }
     pos->best_rabbit = NULL;
     free(rabbit); // coelho não necessário
-    map_rabbit_death_inc(map, 1);
   } else {
     Rabbit *tokill = NULL;
     
@@ -129,7 +127,6 @@ position_move_rabbit(Position* pos, Rabbit* rabbit)
     } else
       tokill = rabbit;
     if(tokill) {
-      map_rabbit_death_inc(map, 1);
       free(tokill);
     }
   }

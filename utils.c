@@ -1,4 +1,6 @@
 
+#include <time.h>
+
 #include "utils.h"
 
 Coord
@@ -28,4 +30,17 @@ coord_at_direction(Coord coord, Direction dir)
   }
   
   return ret;
+}
+
+int
+generate_random(int max)
+{
+  static Boolean first_srand = TRUE;
+  
+  if(first_srand) {
+    first_srand = FALSE;
+    srand((unsigned int)time(NULL));
+  }
+  
+  return rand() % max;
 }

@@ -10,12 +10,16 @@
 
 static int nthreads = 2;
 static ThreadData* thread_data;
-static Boolean print_passes = FALSE;
+
+//#define DEBUG
+
+static int LINES_PER_THREAD_FIRST_PASS = 100;
+static int LINES_PER_THREAD_SECOND_PASS = 99;
 
 #define MAIN_LOCK pthread_mutex_lock(&map->mutex)
 #define MAIN_UNLOCK pthread_mutex_unlock(&map->mutex)
 
-static void
+static inline void
 update_second_pass()
 {
   if(map->proceed_second_pass)
@@ -25,50 +29,53 @@ update_second_pass()
   int total = map->next_row_second_pass +
     min(LINES_PER_THREAD_SECOND_PASS + 1, map->lin - map->next_row_second_pass);
   
-  map->proceed_second_pass = TRUE;
-  
-  for(row = map->next_row_second_pass; row < total; ++row) {
-    if((map->rows_ger_second_pass[row] + 1) != map->rows_ger_first_pass[row]) {
-      map->proceed_second_pass = FALSE;
-      break;
+  if(map->rows_ger_second_pass[map->next_row_second_pass] != map->generation_second_pass)
+    map->proceed_second_pass = FALSE;
+  else {
+    map->proceed_second_pass = TRUE;
+    
+    for(row = map->next_row_second_pass; row < total; ++row) {
+      if((map->rows_ger_second_pass[row] + 1) != map->rows_ger_first_pass[row]) {
+        map->proceed_second_pass = FALSE;
+        break;
+      }
     }
   }
   
   if(map->proceed_second_pass) {
-    if(print_passes)
-      printf("CAN PROCEED SECOND PASS!\n");
+#ifdef DEBUG
+    printf("CAN PROCEED SECOND PASS!\n");
+#endif
     pthread_cond_signal(&map->cond);
+#ifdef DEBUG
   } else {
-    if(print_passes)
       printf("NOT PROCEED SECOND PASS!\n");
+#endif
   }
 }
 
-static void
+static inline void
 update_first_pass()
 {
-  if(!map->more_first_pass || map->proceed_first_pass)
+  if(map->proceed_first_pass)
     return;
   
   int total = min(LINES_PER_THREAD_FIRST_PASS + 1, map->lin - map->next_row_first_pass);
   
-  int i;
-  for(i = 0; i < total; ++i) {
-    printf("%d %d\n", map->rows_ger_first_pass[map->next_row_first_pass + i],
-      map->rows_ger_second_pass[map->next_row_first_pass + i]);
-  }
-  
   if(memcmp(map->rows_ger_first_pass + map->next_row_first_pass,
             map->rows_ger_second_pass + map->next_row_first_pass,
-        sizeof(int) * total) == 0)
+        sizeof(int) * total) == 0
+     && map->generation_first_pass == map->rows_ger_first_pass[map->next_row_first_pass])
   {
     map->proceed_first_pass = TRUE;
-    if(print_passes)
-      printf("CAN PROCEED FIRST PASS!\n");
+#ifdef DEBUG
+    printf("CAN PROCEED FIRST PASS!\n");
+#endif
     pthread_cond_signal(&map->cond);
   } else {
-    if(print_passes)
-      printf("NOT PROCEED FIRST PASS\n");
+#ifdef DEBUG
+    printf("NOT PROCEED FIRST PASS\n");
+#endif
     map->proceed_first_pass = FALSE;
   }
 }
@@ -100,90 +107,88 @@ run_thread(THREAD_PARAM arg)
     if(map->proceed_second_pass) {
       got_first_not_second = FALSE;
       
-      if(print_passes)
-        printf("%d: Second pass at %d\n", thread_num, map->next_row_second_pass);
-      
       total_lines = min(LINES_PER_THREAD_SECOND_PASS, map->lin - map->next_row_second_pass);
       pass_line = map->next_row_second_pass;
       pass_generation = map->rows_ger_second_pass[pass_line] + 1;
       map->next_row_second_pass = (map->next_row_second_pass + total_lines) % map->lin;
       
+      if(map->next_row_second_pass == 0)
+        map->generation_second_pass++;
+      
+      if(map->generation_second_pass == map->n_ger && map->next_row_second_pass == 0)
+        map->more_second_pass = FALSE;
+      
       map->proceed_second_pass = FALSE;
       update_second_pass();
       
-      if(print_passes)
-        printf("%d: new second pass: %d next %d total %d\n", thread_num, pass_line, map->next_row_second_pass, total_lines);
-        
       MAIN_UNLOCK;
       
     } else { // proceed first pass
-      if(map->next_row_first_pass == 0 && map->rows_ger_first_pass[0] == map->n_ger) {
-        map->proceed_first_pass = FALSE;
-        map->more_first_pass = FALSE;
-        MAIN_UNLOCK;
-        continue;
-      }
-      
       got_first_not_second = TRUE;
-      
-      if(print_passes)
-        printf("%d: First pass at %d\n", thread_num, map->next_row_first_pass);
       
       pass_line = map->next_row_first_pass;
       total_lines = min(LINES_PER_THREAD_FIRST_PASS, map->lin - map->next_row_first_pass);
       pass_generation = map->rows_ger_first_pass[pass_line] + 1;
       map->next_row_first_pass = (map->next_row_first_pass + total_lines) % map->lin;
       
-      if(print_passes)
-        printf("%d: new first pass: %d next %d total %d\n", thread_num, pass_line, map->next_row_first_pass, total_lines);
+      if(map->next_row_first_pass == 0)
+        map->generation_first_pass++;
       
       map->proceed_first_pass = FALSE;
-      update_first_pass();
       
+      if(map->generation_first_pass == map->n_ger && map->next_row_first_pass == 0)
+        map->more_first_pass = FALSE;
+      else
+        update_first_pass();
+        
       MAIN_UNLOCK;
     }
     
     if(got_first_not_second) {
-      // do first pass
-      
-      row = pass_line;
-      
+#ifdef DEBUG
       printf("%d: first pass %d to %d\n", thread_num, pass_line, pass_line + total_lines - 1);
-      
-      for(i = 0; i < total_lines; ++i, ++row) {
+#endif
+
+      for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
         Coord_x(coord) = row;
         
         for(j = 0; j < map->col; ++j) {
           Coord_y(coord) = j;
           
-          thread_simulate_position(data, map_position_at(map, row, j), coord, pass_generation);
+          thread_simulate_position(data, map_position_at(map, row, j), coord, pass_generation-1);
         }
+        
+        map->rows_ger_first_pass[row] = pass_generation;
       }
       
-      MAIN_LOCK;
-      memset_pattern4(map->rows_ger_first_pass + pass_line, &pass_generation, sizeof(int)*total_lines);
-      MAIN_UNLOCK;
-      
+#ifdef DEBUG
+      printf("%d: done first pass %d to %d\n", thread_num, pass_line, pass_line + total_lines - 1);
+#endif
+
       if(map->the_end)
         break;
       
-      MAIN_LOCK;
-      update_second_pass();
-      MAIN_UNLOCK;
-      
-    } else {
-      // do second pass
-      
-      row = pass_line;
-      printf("%d: second pass %d to %d\n", thread_num, pass_line, pass_line + total_lines - 1);
-      for(i = 0; i < total_lines; ++i, ++row) {
-        for(j = 0; j < map->col; ++j)
-          thread_resolve_conflict(map, map_position_at(map, row, j));
+      if(map->more_second_pass) {
+        MAIN_LOCK;
+        update_second_pass();
+        MAIN_UNLOCK;
       }
       
-      MAIN_LOCK;
-      memset_pattern4(map->rows_ger_second_pass + pass_line, &pass_generation, sizeof(int)*total_lines);
-      MAIN_UNLOCK;
+    } else { // !got_first_not_second
+#ifdef DEBUG
+      printf("%d: second pass %d to %d\n", thread_num, pass_line, pass_line + total_lines - 1);
+#endif
+      
+      for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
+        for(j = 0; j < map->col; ++j)
+          thread_resolve_conflict(map_position_at(map, row, j));
+        
+        map->rows_ger_second_pass[row] = pass_generation;
+      }
+      
+#ifdef DEBUG
+      printf("%d: done second pass %d to %d\n", thread_num, pass_line, pass_line + total_lines - 1);
+#endif
       
       if(map->the_end)
         break;
@@ -191,7 +196,6 @@ run_thread(THREAD_PARAM arg)
       if(pass_generation == map->n_ger &&
         pass_line + total_lines == map->lin)
       {
-        printf("It ended\n");
         map->the_end = TRUE;
         pthread_cond_broadcast(&map->cond);
         break;
