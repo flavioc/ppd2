@@ -1,3 +1,4 @@
 seq
 simulator
+generator
 *.o
