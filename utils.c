@@ -2,6 +2,8 @@
 #include <time.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include "utils.h"
 
@@ -48,4 +50,12 @@ generate_random(int max)
   }
   
   return rand() % max;
+}
+
+long
+get_miliseconds(void)
+{
+  struct timeval stime;
+  gettimeofday(&stime, NULL);
+  return ((stime.tv_sec) * 1000 + stime.tv_usec/1000.0);
 }

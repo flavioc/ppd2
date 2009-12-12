@@ -11,7 +11,7 @@ seq: seq.o $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) seq.o -o seq
 
 simulator: simulator.o $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) simulator.o -o simulator
+	$(CC) $(CFLAGS) $(OBJS) simulator.o -o simulator -lpthread
 
 generator: generator.o $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) generator.o -o generator

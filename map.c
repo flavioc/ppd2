@@ -39,7 +39,7 @@ map_free(Map* map)
 static void
 map_init(Map* map)
 { 
-  int zero = 0, i, j;
+  int i, j;
   
   map->next_row_first_pass = 0;
   map->next_row_second_pass = 0;
@@ -48,8 +48,10 @@ map_init(Map* map)
   map->rows_ger_first_pass = (int*)malloc(sizeof(int)*map->lin);
   map->rows_ger_second_pass = (int*)malloc(sizeof(int)*map->lin);
   
-  memset_pattern4(map->rows_ger_first_pass, &zero, sizeof(int)*map->lin);
-  memset_pattern4(map->rows_ger_second_pass, &zero, sizeof(int)*map->lin);
+  for(i = 0; i < map->lin; ++i) {
+    map->rows_ger_first_pass[i] = 0;
+    map->rows_ger_second_pass[i] = 0;
+  }
   
   map->proceed_first_pass = TRUE;
   map->proceed_second_pass = FALSE;
@@ -65,14 +67,6 @@ map_init(Map* map)
   for(i = 0; i < map->lin; ++i)
     for(j = 0; j < map->col; ++j)
       position_init(map_position_at(map, i, j));
-}
-
-Position*
-map_position_at(Map* map, int x, int y)
-{
-  int pos = x*map->col + y;
-  assert(pos >= 0 && pos < map->lin*map->col);
-  return map->matrix + pos;
 }
 
 Map*
