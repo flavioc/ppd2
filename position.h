@@ -7,6 +7,8 @@
 #include "utils.h"
 #include "object.h"
 
+#define MAX_FREE_OBJS 20
+
 typedef struct {
   Boolean is_rock;
   Object* obj;
@@ -15,7 +17,7 @@ typedef struct {
   Fox* hungriest_fox;
   Fox* oldest_fox;
   
-  Object* free_objects[4];
+  Object* free_objects[MAX_FREE_OBJS];
   int current_free;
   
   pthread_mutex_t mutex;

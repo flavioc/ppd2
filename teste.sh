@@ -1,7 +1,7 @@
 #!/bin/sh
 
-FILE=file1.txt
+FILE=file2.txt
 
-time ./seq < files/$FILE > st
-time ./simulator 1 < files/$FILE > mt
+time ./seq < files/$FILE 2> st
+time ./simulator 4 < files/$FILE 2> mt
 diff -u st mt

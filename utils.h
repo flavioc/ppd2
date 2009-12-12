@@ -17,7 +17,7 @@ typedef struct {
 #define Coord_y(COORD) ((COORD).y)
 
 typedef enum {
-  DIR_UP,
+  DIR_UP = 0,
   DIR_RIGHT,
   DIR_DOWN,
   DIR_LEFT

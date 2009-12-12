@@ -1,6 +1,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "utils.h"
 
@@ -27,6 +28,9 @@ coord_at_direction(Coord coord, Direction dir)
     case DIR_LEFT:
       Coord_x(ret) = x;
       Coord_y(ret) = y - 1;
+      break;
+    default:
+      assert(FALSE);
       break;
   }
   

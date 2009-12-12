@@ -255,7 +255,7 @@ main(int argc, char** argv)
   simulate();
   
   map_print(map);
-  map_output(map, stdout);
+  map_output(map, stderr);
   
   map_free(map);
   

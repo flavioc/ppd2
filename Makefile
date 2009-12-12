@@ -1,6 +1,6 @@
 
 LDFLAGS = -lpthread
-CFLAGS = -Wall -Wextra -g3
+CFLAGS = -Wall -Wextra -g3 -O2
 
 OBJS = utils.o map.o object.o position.o thread.o
 BINS = seq simulator generator

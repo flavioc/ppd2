@@ -35,7 +35,7 @@ position_add_free(Position* pos, Object* obj)
     if(pos->free_objects[i] == obj)
       return;
   
-  assert(i < 4);
+  assert(i < MAX_FREE_OBJS);
   pos->free_objects[i] = obj;
   pos->current_free++;
 }
@@ -46,9 +46,11 @@ position_clean_free(Position* pos, Object* except)
   if(pos->current_free > 0) {
     int i;
   
-    for(i = 0; i < pos->current_free; ++i)
-      if(pos->free_objects[i] != except)
+    for(i = 0; i < pos->current_free; ++i) {
+      if(pos->free_objects[i] != except) {
         free(pos->free_objects[i]);
+      }
+    }
   
     pos->current_free = 0;
   }
@@ -64,7 +66,7 @@ position_move_fox(Position* pos, Fox* fox)
   if(pos->best_rabbit) {
     had_rabbit = TRUE;
     
-    free(pos->best_rabbit); // libertar coelho
+    position_add_free(pos, (Object*)pos->best_rabbit); // libertar coelho
     pos->best_rabbit = NULL;
     
     if(pos->hungriest_fox) {
@@ -74,6 +76,8 @@ position_move_fox(Position* pos, Fox* fox)
   } else if(pos->oldest_fox && !pos->hungriest_fox)
     had_rabbit = TRUE;
   
+  Boolean added = FALSE;
+  
   if(!had_rabbit) {
     if(!pos->hungriest_fox ||
       pos->hungriest_fox->last_food < fox->last_food)
@@ -81,6 +85,7 @@ position_move_fox(Position* pos, Fox* fox)
       if(pos->hungriest_fox)
         position_add_free(pos, (Object*)pos->hungriest_fox);
       pos->hungriest_fox = fox;
+      added = TRUE;
     }
   }
   
@@ -90,7 +95,11 @@ position_move_fox(Position* pos, Fox* fox)
     if(pos->oldest_fox)
       position_add_free(pos, (Object*)pos->oldest_fox);
     pos->oldest_fox = fox;
+    added = TRUE;
   }
+  
+  if(!added)
+    position_add_free(pos, (Object*)fox);
   
   pthread_mutex_unlock(&pos->mutex);
 }
@@ -106,7 +115,7 @@ position_move_rabbit(Position* pos, Rabbit* rabbit)
       pos->hungriest_fox = NULL;
     }
     pos->best_rabbit = NULL;
-    free(rabbit); // coelho não necessário
+    position_add_free(pos, (Object*)rabbit); // coelho nao necessario
   } else {
     Rabbit *tokill = NULL;
     
@@ -118,9 +127,9 @@ position_move_rabbit(Position* pos, Rabbit* rabbit)
       pos->best_rabbit = rabbit;
     } else
       tokill = rabbit;
-    if(tokill) {
-      free(tokill);
-    }
+      
+    if(tokill)
+      position_add_free(pos, (Object*)tokill);
   }
 
   pthread_mutex_unlock(&pos->mutex);
