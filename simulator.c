@@ -207,8 +207,8 @@ simulate(void)
     LINES_PER_THREAD_FIRST_PASS = map->lin;
     LINES_PER_THREAD_SECOND_PASS = map->lin;
   } else {
-    LINES_PER_THREAD_FIRST_PASS = map->lin / (NTHREADS + 2 * NTHREADS);
-    LINES_PER_THREAD_SECOND_PASS = map->lin / (NTHREADS + 2 * NTHREADS);
+    LINES_PER_THREAD_FIRST_PASS = map->lin / (3 * NTHREADS);
+    LINES_PER_THREAD_SECOND_PASS = map->lin / (3 * NTHREADS);
   }
   
   for(i = 1; i < NTHREADS; ++i) {
@@ -241,11 +241,11 @@ main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
   
-  map_print(map, stdout);
+  //map_print(map, stdout);
   
   simulate();
   
-  map_print(map, stdout);
+  //map_print(map, stdout);
   //map_output(map, stderr);
   
   map_free(map);
