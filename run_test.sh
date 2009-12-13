@@ -5,12 +5,12 @@ DIR=results
 run_prog()
 {
   PROGRAM="$1"
-  FILE="$2"
+  TEST_FILE="$2"
   RESULT="$3"
 
-  echo "$PROGRAM < $FILE > $DIR/$RESULT"
+  echo "$PROGRAM < $TEST_FILE > $DIR/$RESULT"
 
-  { time $PROGRAM < $FILE; } &> $DIR/$RESULT
+  { time $PROGRAM < $TEST_FILE; } &> $DIR/$RESULT
 }
 
 run_test()
