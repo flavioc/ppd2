@@ -54,7 +54,6 @@ thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, i
     }
   }
       
-  assert(real_index != -1);
   assert(real_index >= 0 && real_index < 4);
   
   if(rabbit->last_procreation >= map->ger_proc_coelhos) {
@@ -101,8 +100,7 @@ thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int 
     
     tmp_pos = data->positions[i] = map_position_at_coord(map, tmp_coord);
     
-    if(
-    tmp_pos->is_rock ||
+    if(tmp_pos->is_rock ||
       (tmp_pos->obj && tmp_pos->obj->type == FOX))
     {
       data->free_pos[i] = FALSE;
@@ -194,6 +192,7 @@ thread_resolve_conflict(Position* pos)
     pos->hungriest_fox = NULL;
   } else if(pos->oldest_fox) { // apareceram coelhos e raposas!
     pos->obj = (Object*)pos->oldest_fox;
+    pos->oldest_fox->last_food = 0;
     pos->oldest_fox = NULL;
   }
   
