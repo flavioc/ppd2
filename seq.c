@@ -58,10 +58,10 @@ main(int argc, char** argv)
   
   simulate();
   
-  //map_print(map);
+  map_print(map, stdout);
   //map_statistics(map);
   //map_write(map, stderr);
-  map_output(map, stderr);
+  //map_output(map, stderr);
   map_free(map);
   
   return EXIT_SUCCESS;

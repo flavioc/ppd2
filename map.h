@@ -39,7 +39,7 @@ typedef struct {
 #define map_position_at_coord(MAP, COORD) map_position_at(MAP, Coord_x(COORD), Coord_y(COORD))
 
 Map*    map_read(FILE *fp);
-void    map_print(Map* map);
+void    map_print(Map* map, FILE* fp);
 void    map_free(Map* map);
 Boolean map_inside(Map* map, int x, int y);
 Boolean map_inside_coord(Map* map, Coord coord);

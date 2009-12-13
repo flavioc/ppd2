@@ -137,49 +137,49 @@ map_read(FILE* fp)
   return map;
 }
 
-static void
-print_line(int size)
+static inline void
+print_line(FILE* fp, int size)
 {
   int i;
   
   for(i = 0; i < size; ++i)
-    printf("=");
+    fprintf(fp, "=");
     
-  printf("\n");
+  fprintf(fp, "\n");
 }
 
 void
-map_print(Map* map)
+map_print(Map* map, FILE* fp)
 {
   int i, j;
   Position* pos;
   
-  print_line(map->col + 2);
+  print_line(fp, map->col + 2);
   
   for(i = 0; i < map->lin; ++i) {
-    printf("|");
+    fprintf(fp, "|");
     for(j = 0; j < map->col; ++j) {
       pos = map_position_at(map, i, j);
       
       if(pos->is_rock) {
-        printf("-");
+        fprintf(fp, "-");
         continue;
       }
       
       if(pos->obj)
         switch(pos->obj->type) {
           case RABBIT:
-            printf("C"); break;
+            fprintf(fp, "C"); break;
           case FOX:
-            printf("F"); break;
+            fprintf(fp, "F"); break;
         }
       else
-        printf(" ");
+        fprintf(fp, " ");
     }
-    printf("|\n");
+    fprintf(fp, "|\n");
   }
   
-  print_line(map->col + 2);
+  print_line(fp, map->col + 2);
 }
 
 void

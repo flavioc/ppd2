@@ -95,6 +95,7 @@ run_thread(THREAD_PARAM arg)
     }
     
     if(map->proceed_second_pass) {
+      // take work from second pass
       total_lines = min(LINES_PER_THREAD_SECOND_PASS, map->lin - map->next_row_second_pass);
       pass_line = map->next_row_second_pass;
       pass_generation = map->generation_second_pass + 1;
@@ -112,6 +113,8 @@ run_thread(THREAD_PARAM arg)
         update_second_pass();
       
       MAIN_UNLOCK;
+      
+      // do second pass work
 
       for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
         for(j = 0; j < map->col; ++j) {
@@ -141,6 +144,7 @@ run_thread(THREAD_PARAM arg)
       
     } else { // proceed first pass
 
+      // take work from first pass
       pass_line = map->next_row_first_pass;
       total_lines = min(LINES_PER_THREAD_FIRST_PASS, map->lin - map->next_row_first_pass);
       pass_generation = map->generation_first_pass + 1;
@@ -158,6 +162,7 @@ run_thread(THREAD_PARAM arg)
       
       MAIN_UNLOCK;
 
+      // do first pass work
       for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
         Coord_x(coord) = row;
 
@@ -236,12 +241,12 @@ main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
   
-  map_print(map);
+  map_print(map, stdout);
   
   simulate();
   
-  map_print(map);
-  map_output(map, stderr);
+  map_print(map, stdout);
+  //map_output(map, stderr);
   
   map_free(map);
   
