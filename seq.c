@@ -47,6 +47,9 @@ simulate(void)
 int
 main(int argc, char** argv)
 {
+  (void)argc;
+  (void)argv;
+  
   map = map_read(stdin);
    
   if(!map) {

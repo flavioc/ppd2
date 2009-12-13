@@ -1,6 +1,9 @@
 
 LDFLAGS = -lpthread
-CFLAGS = -Wall -Wextra -g3 -O2
+DEBUG = -g3
+WARNINGS = -Wall -Wextra
+OPTMS = -O2
+CFLAGS = $(WARNINGS) $(DEBUG) $(OPTMS)
 
 OBJS = utils.o map.o object.o position.o thread.o
 BINS = seq simulator generator
