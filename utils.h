@@ -26,6 +26,7 @@ typedef enum {
 Coord coord_at_direction(Coord coord, Direction dir);  
 
 #define min(A, B) ((A) < (B) ? (A) : (B))
+#define max(A, B) ((A) > (B) ? (A) : (B))
 
 int generate_random(int max);
 long get_miliseconds(void);

@@ -207,8 +207,8 @@ simulate(void)
     LINES_PER_THREAD_FIRST_PASS = map->lin;
     LINES_PER_THREAD_SECOND_PASS = map->lin;
   } else {
-    LINES_PER_THREAD_FIRST_PASS = map->lin / (3 * NTHREADS);
-    LINES_PER_THREAD_SECOND_PASS = map->lin / (3 * NTHREADS);
+    LINES_PER_THREAD_FIRST_PASS = max(1, map->lin / (3 * NTHREADS));
+    LINES_PER_THREAD_SECOND_PASS = max(1, map->lin / (3 * NTHREADS));
   }
   
   for(i = 1; i < NTHREADS; ++i) {
