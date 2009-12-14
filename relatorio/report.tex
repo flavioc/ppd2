@@ -36,18 +36,18 @@ obtidos em termos temporais serão comparados com uma versão sequencial.
 \section{Introdução}
 
 Neste relatório será descrita uma solução para o problema de simular, de forma paralela,
-sucessivas gerações de um eco-sistema composto por raposas e coelhos.
+sucessivas gerações de um ecossistema composto por raposas e coelhos.
 
-O eco-sistema é representado por uma matriz onde
+O ecossistema é representado por uma matriz onde
 cada posição pode ser ocupada por um coelho, uma raposa ou um rocha.
 A matriz é inicializada por uma população inicial de coelhos e raposa.
 Diversas rochas serão colocadas para funcionar como obstáculos.
 
-A evolução do eco-sistema é feita geração a geração de acordo com um conjunto de regras bem definido.
+A evolução do ecossistema é feita geração a geração de acordo com um conjunto de regras bem definido.
 A simulação termina quando um determinado número de gerações é atingido.
 
 Foi implementada uma versão sequencial para o problema e outra versão paralela em memória partilhada
-que funciona usando o paradigma de \textit{pipelining}.
+que funciona usando o paradigma de \textit{pipelining} \cite{pipeline}.
 
 O resto deste relatório será composto pela descrição das regras do sistema e da descrição
 ds algoritmos e estruturas de dados comuns e específicos para cada versão.
@@ -59,7 +59,7 @@ o relatório terminará com uma pequena conclusão e análise dos resultados obt
 
 \section{Regras}
 
-O eco-sistema é representado por uma matriz de \textbf{LIN} linhas e \textbf{COL} colunas.
+O ecossistema é representado por uma matriz de \textbf{LIN} linhas e \textbf{COL} colunas.
 Cada posição é ocupada por um coelho, uma raposa ou uma rocha.
 A simulação é feita gerando sucessivas gerações do sistema até se atingir o número
 desejado de gerações.
@@ -112,7 +112,7 @@ utilizados por 3 programas diferentes:
 \subsection{Módulos}
 
 Foi criado o módulo \textbf{object} que encapsula a criação de estruturas do
-tipo \textit{Fox} e \textit{Rabbit}, estas têm como base uma estrutura de nome \textit{Object}.
+tipo \textit{Fox} e \textit{Rabbit}; estas têm como base uma estrutura de nome \textit{Object}.
 Cada uma destas estruturas contém assim o tipo de objecto e estado adicional necessário para correr a simulação:
 
 \begin{itemize}
@@ -167,7 +167,7 @@ funciona por duas iterações completas pela matriz do mapa:
 \subsection{Movimentação}
 
 Durante a primeira fase são usadas as funções \textit{position\_move\_fox} e \textit{position\_move\_rabbit}
-onde é usado o estado temporário da posição para onde o animal se irá mover. Este estado temporário
+onde é alterado o estado temporário da posição para onde o animal se irá mover. Este estado temporário
 contém um vector onde são colocados animais que durante esta geração serão libertados da memória durante
 o segundo passo. Também existem vários apontadores:
 
@@ -190,7 +190,7 @@ No final do primeiro passo existem três tipos de estado para estes apontadores:
   \item Tudo a nulo: nenhum animal se movimentou para aqui.
 \end{itemize}
 
-O objecto principal deste sistema de apontadores é resolver os conflitos o mais cedo possível.
+O objectivo principal deste sistema de apontadores é resolver os conflitos o mais cedo possível.
 
 Quando finalmente o segundo passo do algoritmo é executado, o apontador para o objecto da posição é alterado
 para respeitar o estado da área temporária e todos os objectos que devem ser libertados apartir desta posição são retirados da memória.
@@ -199,7 +199,7 @@ para respeitar o estado da área temporária e todos os objectos que devem ser l
 
 A versão sequencial do sistema faz uso dos módulos mencionados na secção \ref{sec:arq} (Arquitectura do sistema).
 
-\begin{lstlisting}[language=c,frame=single,caption={Algoritmo da versão sequencial.},label=sequencial]
+\begin{lstlisting}[language=c,frame=single,basicstyle=\footnotesize,caption={Algoritmo da versão sequencial.},label=sequencial]
 - De 0 ate a geracao limite:
   - Para todas as posicoes da matriz:
     thread_simulate_position(posicao) // simular movimentacao na posicao
@@ -212,11 +212,11 @@ paralela como veremos a seguir.
 
 \section{Versão paralela}
 
-A versão paralela da aplicação é feita em memória partilhada usando \textit{pthreads}.
+A versão paralela da aplicação foi desenvolvida em memória partilhada usando \textit{pthreads} \cite{pthreads}.
 
 A divisão do trabalho entre \textit{threads} é feita num sistema de fila de tarefas central, sendo
-uma tarefa um bloco potencialmente variável de linhas da matriz, sendo a tarefa executar o primeiro
-ou segundo passo do algoritmo mostrado anteriormente nesse bloco de linhas. A figura \ref{fig:tasks_matriz}
+uma tarefa um bloco potencialmente variável de linhas da matriz, no qual é necessário executar o primeiro
+ou segundo passo do algoritmo mostrado anteriormente. A figura \ref{fig:tasks_matriz}
 mostra uma possível divisão de uma matriz.
 
 \begin{figure}[ht]
@@ -323,7 +323,7 @@ de um animal para essa posição e toda a gestão da área temporária de dados.
 
 Em termos de divisão de trabalho e balanceamento de carga, a natureza do algoritmo implementado
 assegura que na grande maioria dos casos nenhuma \textit{thread} irá ter trabalho a mais,
-desde que a divisão em blocos do mapa seja adequado para o número de \textit{threads} e tamanho do eco-sistema.
+desde que a divisão em blocos do mapa seja adequado para o número de \textit{threads} e tamanho do ecossistema.
 Isto permite que todas as \textit{threads} estejam constantemente a computar e a processar
 novas tarefas. Não esquecer que no esquema descrito, todas as \textit{threads} têm a mesma oportunidade
 para trabalhar, resultando numa boa distribuição de carga.
@@ -333,13 +333,11 @@ para trabalhar, resultando numa boa distribuição de carga.
 Durante a implementação da solução foi-se verificando que a definição do tamanho do bloco de linhas
 para cada tarefa afectava de forma bastante significativa a performance do algoritmo paralelo.
 Por exemplo, se o tamanho do bloco for demasiado pequeno, o sistema irá passar demasiado tempo
-a computar se é possível avançar para as próximas tarefas, já um tamanho demasiado grande,
+a computar se é possível avançar para as próximas tarefas; já um tamanho demasiado grande,
 fará com que algumas \textit{threads} fiquem bloqueadas à espera de novas tarefas, dado que não será sempre
 possível avançar devido às restrições entre o primeiro e segundo passo.
 
-Decidiu-se experimentar diferentes funções para calcular o tamanho dos blocos em função do número de linhas
-do mapa (\textbf{LIN}) e o número de \textit{threads} (\textbf{NTHREADS}).
-Foram também criados 3 ficheiros de teste:
+Foram criados 3 ficheiros de teste:
 
 \begin{itemize}
   \item \textit{teste1}: mapa 100x100: 10000 gerações. 8968 animais.
@@ -347,16 +345,21 @@ Foram também criados 3 ficheiros de teste:
   \item \textit{teste3}: mapa 1000x100: 10000 gerações. 90165 animais.
 \end{itemize}
 
-Para todos os eco-sistemas o número de gerações até que um coelho possa procriar é 1, o número
+Para todos os ecossistemas o número de gerações até que um coelho possa procriar é 1, o número
 de gerações até que uma raposa possa procriar é 8 e o número de gerações até que uma raposa morra à fome é 3.
 
 Os testes foram executados num computador com 4 processadores \textit{Intel(R) Xeon(TM) CPU 3.20GHz} e 6GB de
 memória RAM.
 
+Decidiu-se experimentar diferentes funções para calcular o tamanho dos blocos em função do número de linhas
+do mapa (\textbf{LIN}) e o número de \textit{threads} (\textbf{NTHREADS}). A função básica de cálculo
+segue a forma $LIN / (F * NTHREADS)$.
+
 \begin{table}[H]
+\begin{center}
     \begin{tabular}{ | l | c |}
       \hline
-      \textbf{Teste} & \textbf{Time} \\ \hline
+      \textbf{Teste} & \textbf{Tempo} \\ \hline
       1 (sequencial) & 0m20.776s \\ \hline
       1 (1 \textit{thread}) & 0m25.480s \\ \hline
       2 (sequencial) & 2m21.434s \\ \hline
@@ -366,42 +369,48 @@ memória RAM.
   \end{tabular}
   \caption{Resultados para execuções sequenciais}
   \label{tbl:resultados_seq}
+\end{center}
 \end{table}
 
 \begin{table}[H]
+  \begin{center}
     \begin{tabular}{ | l | c | c | c | c |}
       \hline
-      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Time} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
-      1 & 2 & 0m15.868s & 1.31 & 1.61 \\ \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Tempo} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
+      1 & 2 & 0m15.868s & \textbf{1.31} & \textbf{1.61} \\ \hline
       1 & 4 & 0m15.862s & 1.31 & 1.61 \\ \hline
       2 & 2 & 2m4.158s & 1.14 & 1.32 \\ \hline
       2 & 4 & 1m47.983s & 1.31 & 1.52 \\ \hline
       3 & 2 & 4m35.252s & 1.11 & 1.26 \\ \hline
       3 & 4 & 4m10.365s & 1.22 & 1.39 \\ \hline
   \end{tabular}
-  \caption{Resultados para a função de divisão: LIN / (1.0 * NTHREADS)}
+  \caption{Resultados para F = 1.0}
   \label{tbl:resultados1}
+  \end{center}
 \end{table}
 
 \begin{table}[H]
+   \begin{center}
     \begin{tabular}{ | l | c | c | c | c |}
       \hline
-      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Time} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Tempo} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
       1 & 2 & 0m20.098s & 1.03 & 1.27 \\ \hline
-      1 & 4 & 0m14.958s & 1.39 & 1.70 \\ \hline
+      1 & 4 & 0m14.958s & \textbf{1.39} & \textbf{1.70} \\ \hline
       2 & 2 & 2m8.023s & 1.10 & 1.29 \\ \hline
       2 & 4 & 1m49.057s & 1.30 & 1.51 \\ \hline
       3 & 2 & 4m24.575s & 1.16 & 1.31 \\ \hline
       3 & 4 & 3m58.381s & 1.28 & 1.46 \\ \hline
   \end{tabular}
-  \caption{Resultados para a função de divisão: LIN / (1.5 $*$ NTHREADS)}
+  \caption{Resultados para F = 1.5}
   \label{tbl:resultados15}
+  \end{center}
 \end{table}
 
 \begin{table}[H]
+  \begin{center}
     \begin{tabular}{ | l | c | c | c | c |}
       \hline
-      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Time} & \textbf{Speedup1} & \textbf{Speedup2}\\ \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Tempo} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
       1 & 2 & 0m20.122s & 1.03 & 1.27 \\ \hline
       1 & 4 & 0m15.942s & 1.30 & 1.60 \\ \hline
       2 & 2 & 2m5.967s & 1.12 & 1.31 \\ \hline
@@ -409,68 +418,118 @@ memória RAM.
       3 & 2 & 4m22.362s & 1.17 & 1.32 \\ \hline
       3 & 4 & 3m56.137s & 1.30 & 1.47 \\ \hline
   \end{tabular}
-  \caption{Resultados para a função de divisão: LIN / (2.0 $*$ NTHREADS)}
+  \caption{Resultados para F = 2.0}
   \label{tbl:resultados2}
+  \end{center}
 \end{table}
 
 \begin{table}[H]
+  \begin{center}
     \begin{tabular}{ | l | c | c | c | c |}
       \hline
-      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Time} & \textbf{Speedup1} & \textbf{Speedup2}\\ \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Tempo} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
       1 & 2 & 0m18.138s & 1.15 & 1.41 \\ \hline
       1 & 4 & 0m15.513s & 1.34 & 1.64 \\ \hline
-      2 & 2 & 2m0.997s & 1.18 & 1.37 \\ \hline
+      2 & 2 & 2m0.997s & \textbf{1.18} & \textbf{1.37} \\ \hline
       2 & 4 & 1m43.750s & 1.37 & 1.60 \\ \hline
-      3 & 2 & 4m18.844s & 1.19 & 1.35 \\ \hline
+      3 & 2 & 4m18.844s & \textbf{1.19} & \textbf{1.35} \\ \hline
       3 & 4 & 4m4.700s & 1.25 & 1.42 \\ \hline
   \end{tabular}
-  \caption{Resultados para a função de divisão: LIN / (3.0 $*$ NTHREADS)}
+  \caption{Resultados para F = 3.0}
   \label{tbl:resultados3}
+  \end{center}
 \end{table}
 
 \begin{table}[H]
+  \begin{center}
     \begin{tabular}{ | l | c | c | c | c |}
       \hline
-      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Time} & \textbf{Speedup1} & \textbf{Speedup2}\\ \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Tempo} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
       1 & 2 & 0m22.276s & 0.93 & 1.14 \\ \hline
       1 & 4 & 0m18.196s & 1.14 & 1.40 \\ \hline
-      2 & 2 & 2m7.374s & 1.11 & 1.29\\ \hline
-      2 & 4 & 1m33.914s & 1.51 & 1.75 \\ \hline
+      2 & 2 & 2m7.374s & 1.11 & 1.29 \\ \hline
+      2 & 4 & 1m33.914s & \textbf{1.51} & \textbf{1.75} \\ \hline
       3 & 2 & 4m21.648s & 1.17 & 1.33 \\ \hline
       3 & 4 & 4m0.389s & 1.28 & 1.45 \\ \hline
   \end{tabular}
-  \caption{Resultados para a função de divisão: LIN / (5.0 $*$ NTHREADS)}
+  \caption{Resultados para F = 5.0}
   \label{tbl:resultados5}
+  \end{center}
 \end{table}
 
-0m20.776s
-0m25.480s
-2m21.434s
-2m44
-5m6.016s
-5m47.282s
-
 \begin{table}[H]
+  \begin{center}
     \begin{tabular}{ | l | c | c | c | c |}
       \hline
-      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Time} & \textbf{Speedup1} & \textbf{Speedup2}\\ \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Tempo} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
       1 & 2 & 0m19.813s & 1.05 & 1.29 \\ \hline
       1 & 4 & 0m20.736s & 1.00 & 1.23 \\ \hline
       2 & 2 & 2m7.711s & 1.11 & 1.29 \\ \hline
       2 & 4 & 1m28.621s & 1.61 & 1.86 \\ \hline
       3 & 2 & 4m24.639s & 1.16 & 1.31 \\ \hline
-      3 & 4 & 3m33.577s & 1.44 & 1.62 \\ \hline
+      3 & 4 & 3m33.577s & \textbf{1.44} & \textbf{1.62} \\ \hline
   \end{tabular}
-  \caption{Resultados para a função de divisão: LIN / (10.0 $*$ NTHREADS)}
+  \caption{Resultados para F = 10.0}
   \label{tbl:resultados10}
+  \end{center}
+\end{table}
+
+\begin{table}[H]
+  \begin{center}
+    \begin{tabular}{ | l | c | c | c | c |}
+      \hline
+      \textbf{Teste} & \textbf{\textit{Threads}} & \textbf{Speedup / sequencial} & \textbf{Speedup / 1 thread}\\ \hline
+      1 & 2 & 1.31 (1.0, 50) & 1.61 (1.0, 50) \\ \hline
+      1 & 4 & 1.39 (1.5, 16) & 1.70 (1.5, 16) \\ \hline
+      2 & 2 & 1.18 (3.0, 83) & 1.37 (3.0, 83) \\ \hline
+      2 & 4 & 1.51 (5.0, 25) & 1.75 (5.0, 25) \\ \hline
+      3 & 2 & 1.19 (3.0, 166) & 1.35 (3.0, 166) \\ \hline
+      3 & 4 & 1.44 (10.0, 25) & 1.62 (10.0, 25) \\ \hline \hline
+      \textbf{Média} & & & \\ \hline
+      & 2 \textit{threads} & 1.23 (2.33, 99) & 1.44 (2.33, 99) \\ \hline
+      & 4 \textit{threads} & 1.45 (5.5, 22) & 1.69 (5.5, 22) \\ \hline
+      & total & 1.33 (3.91, 61) & 1.57 (3.91, 61) \\ \hline  
+  \end{tabular}
+  \caption{Melhores \textit{speedups}}
+  \label{tbl:best_results}
+  \end{center}
 \end{table}
 
 \section{Conclusões}
+
+Pela análise das tabelas \ref{tbl:resultados1}, \ref{tbl:resultados15}, \ref{tbl:resultados2}, \ref{tbl:resultados3},
+\ref{tbl:resultados5} e \ref{tbl:resultados10}, podemos verificar que o desempenho do algoritmo paralelo é bastante
+afectado pela divisão e tamanho de blocos para cada tarefa.
+
+Pelos tempos das execuções sequenciais na tabela \ref{tbl:resultados_seq}, verifica-se que os cálculos
+para determinar se é possível executar novas tarefas são de certa forma elevados. O efeito destas computações
+extra do algoritmo paralelo têm repercursões nos \textit{speedups} das tabelas mencionadas anteriormente,
+que embora sejam satisfatórios, desiludem um pouco.
+
+Na tabela \ref{tbl:best_results} são mostrados os melhores \textit{speedups} para cada configuração experimentada.
+Ao lado do \textit{speedup}, entre parêntesis, estão referenciados o valor do \textit{F} para aquele melhor valor
+e o tamanho do bloco durante a execução. Nota-se claramente que os testes mais pequenos têm melhores resultados
+quando o valor de \textit{F} é pequeno e o tamanho dos blocos é relativamente grande ($\approx$50);
+quando o tamanho da matriz aumenta é nos valores mais elevados de \textit{F} que se encontram os melhores
+\textit{speedups} mantendo assim o tamanho dos blocos relativamente igual.
+
+Quanto a possíveis desenvolvimentos, a melhor aposta será aperfeiçoar as funções que verificam
+a existência de novas tarefas na \textit{pipeline} e uma escolha inteligente do tamanho dos blocos, possivelmente
+usando blocos de tamanho diferente para o primeiro passo e segundo passo.
+
+Embora o algoritmo implementado não funcione tão bem como nós esperávamos inicialmente, é possível que
+novas melhorias tragam mais e melhor desempenho a uma forma interessante de paralelizar problemas de simulação
+deste género.
 
 \renewcommand{\bibname}{Referências}
 \begin{thebibliography}{10}
   
 	\bibitem{enunciado} Ricardo Rocha e Fernando Silva, Trabalho II: Simulação de um Ecossistema de Raposas e Coelhos, \url{http://www.dcc.fc.up.pt/~ricroc/aulas/0910/ppd/trabalhos/eco.html}
+	
+	\bibitem{pipeline} Ricardo Rocha e Fernando Silva, Programação Paralela e Distribuída: Fundamentos,
+	\url{http://www.dcc.fc.up.pt/~ricroc/aulas/0910/ppd/apontamentos/fundamentos.pdf}
+	
+	\bibitem{pthreads} Ricardo Rocha e Fernando Silva, rogramação Paralela e Distribuída: Programação em Memória Partilhada com o Pthreads, \url{http://www.dcc.fc.up.pt/~ricroc/aulas/0910/ppd/apontamentos/pthreads-pb.pdf}
 	
 \end{thebibliography}
 
