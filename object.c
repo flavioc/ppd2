@@ -10,6 +10,7 @@ object_new_rabbit(void)
 
   Object_type(ret) = RABBIT;
   ret->last_procreation = 0;
+  ret->procreate = FALSE;
 
   return ret;
 }
@@ -23,6 +24,7 @@ object_new_fox(void)
 
   ret->last_procreation = 0;
   ret->last_food = 0;
+  ret->procreate = FALSE;
 
   return ret;
 }

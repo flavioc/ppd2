@@ -14,7 +14,9 @@ position_init(Position* pos)
   pos->hungriest_fox = NULL;
   pos->oldest_fox = NULL;
   pos->current_free = 0;
+  
   pthread_mutex_init(&pos->mutex, NULL);
+  pthread_mutex_init(&pos->obj_mutex, NULL);
 }
 
 void
@@ -24,6 +26,7 @@ position_free(Position* pos)
     free(pos->obj);
   
   pthread_mutex_destroy(&pos->mutex);
+  pthread_mutex_destroy(&pos->obj_mutex);
 }
 
 void
@@ -31,18 +34,26 @@ position_add_free(Position* pos, Object* obj)
 {
   int i;
   
+  pthread_mutex_lock(&pos->obj_mutex);
+  
   for(i = 0; i < pos->current_free; ++i)
-    if(pos->free_objects[i] == obj)
+    if(pos->free_objects[i] == obj) {
+      pthread_mutex_unlock(&pos->obj_mutex);
       return;
+    }
   
   assert(i < MAX_FREE_OBJS);
   pos->free_objects[i] = obj;
   pos->current_free++;
+  
+  pthread_mutex_unlock(&pos->obj_mutex);
 }
 
 void
 position_clean_free(Position* pos, Object* except)
 {
+  pthread_mutex_lock(&pos->obj_mutex);
+  
   if(pos->current_free > 0) {
     int i;
   
@@ -54,6 +65,8 @@ position_clean_free(Position* pos, Object* except)
   
     pos->current_free = 0;
   }
+  
+  pthread_mutex_unlock(&pos->obj_mutex);
 }
 
 void
@@ -84,6 +97,7 @@ position_move_fox(Position* pos, Fox* fox)
     {
       if(pos->hungriest_fox)
         position_add_free(pos, (Object*)pos->hungriest_fox);
+      
       pos->hungriest_fox = fox;
       added = TRUE;
     }
@@ -94,6 +108,7 @@ position_move_fox(Position* pos, Fox* fox)
   {
     if(pos->oldest_fox)
       position_add_free(pos, (Object*)pos->oldest_fox);
+    
     pos->oldest_fox = fox;
     added = TRUE;
   }

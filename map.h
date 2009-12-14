@@ -22,6 +22,7 @@ typedef struct {
   int generation_second_pass;
   int* rows_ger_first_pass;
   int* rows_ger_second_pass;
+  
   Boolean proceed_first_pass;
   Boolean proceed_second_pass;
   Boolean the_end;

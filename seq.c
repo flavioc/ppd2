@@ -64,7 +64,7 @@ main(int argc, char** argv)
   //map_print(map, stdout);
   //map_statistics(map);
   //map_write(map, stderr);
-  //map_output(map, stderr);
+  map_output(map, stdout);
   map_free(map);
   
   return EXIT_SUCCESS;

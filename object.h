@@ -15,12 +15,14 @@ typedef struct {
 typedef struct {
   Object comm;
   int last_procreation;
+  Boolean procreate;
 } Rabbit;
 
 typedef struct {
   Object comm;
   int last_procreation;
   int last_food;
+  Boolean procreate;
 } Fox;
 
 #define Object_type(OBJ) ((OBJ)->comm.type)

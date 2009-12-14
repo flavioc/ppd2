@@ -33,8 +33,6 @@ thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, i
     data->free_pos[i] = TRUE;
   }
   
-  rabbit->last_procreation++;
-  
   if(total_free == 0) {
     // não há casas livres, manter...
     position_move_rabbit(pos, rabbit);
@@ -53,13 +51,13 @@ thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, i
       }
     }
   }
-      
+
   assert(real_index >= 0 && real_index < 4);
   
   if(rabbit->last_procreation >= map->ger_proc_coelhos) {
     // vai reproduzir-se...
     
-    rabbit->last_procreation = 0;
+    rabbit->procreate = TRUE;
     
     position_move_rabbit(pos, object_new_rabbit());
   }
@@ -72,17 +70,11 @@ thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int 
 {
   Fox* fox = (Fox*)pos->obj;
   
-  fox->last_food++;
-  
   if(fox->last_food >= map->ger_alim_raposas) {
-    pthread_mutex_lock(&pos->mutex);
     // morreu
     position_add_free(pos, (Object*)fox);
-    pthread_mutex_unlock(&pos->mutex);
     return;
   }
-  
-  fox->last_procreation++;
   
   int i, total_free = ADJACENT, rabbits = 0;
   Coord tmp_coord;
@@ -138,7 +130,7 @@ thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int 
   }
   
   assert(bool_array != NULL);
-  
+
   for(i = 0; i < ADJACENT; ++i) {
     if(bool_array[i]) {
       if(!index--) {
@@ -152,7 +144,7 @@ thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int 
   
   if(fox->last_procreation >= map->ger_proc_raposas) {
     // vai procriar
-    fox->last_procreation = 0;
+    fox->procreate = TRUE;
     position_move_fox(pos, object_new_fox());
   }
   
@@ -168,8 +160,6 @@ thread_simulate_position(ThreadData* data, Map* map, Position* pos, Coord coord,
     if(pos->obj->type == FOX)
       thread_simulate_fox(data, map, coord, pos, ger);
   }
-  
-  //printf("A simular %d %d na geração %d\n", Coord_x(coord), Coord_y(coord), ger);
 }
 
 void
@@ -178,6 +168,8 @@ thread_resolve_conflict(Position* pos)
   assert(pos != NULL);
   
   pos->obj = NULL;
+  
+  Boolean fox_eat = FALSE;
   
   if(pos->best_rabbit) { // so apareceram coelhos
     pos->obj = (Object*)pos->best_rabbit;
@@ -191,12 +183,47 @@ thread_resolve_conflict(Position* pos)
     pos->oldest_fox = NULL;
     pos->hungriest_fox = NULL;
   } else if(pos->oldest_fox) { // apareceram coelhos e raposas!
-    pos->obj = (Object*)pos->oldest_fox;
     pos->oldest_fox->last_food = 0;
+    fox_eat = TRUE;
+    pos->obj = (Object*)pos->oldest_fox;
     pos->oldest_fox = NULL;
   }
   
   position_clean_free(pos, pos->obj);
+  
+  Object* obj = pos->obj;
+  
+  if(obj) {
+    switch(obj->type) {
+      case RABBIT:
+      {
+        Rabbit* rabbit = (Rabbit*)obj;
+        
+        if(rabbit->procreate)
+          rabbit->last_procreation = 0;
+        else
+          rabbit->last_procreation++;
+          
+        rabbit->procreate = FALSE;
+      }
+      break;
+      case FOX:
+      {
+        Fox* fox = (Fox*)obj;
+        
+        if(!fox_eat)
+          fox->last_food++;
+          
+        if(fox->procreate)
+          fox->last_procreation = 0;
+        else
+          fox->last_procreation++;
+        
+        fox->procreate = FALSE;
+      }
+      break;
+    }
+  }
   
   assert(pos->best_rabbit == NULL);
   assert(pos->hungriest_fox == NULL);

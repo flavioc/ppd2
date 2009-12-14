@@ -43,8 +43,8 @@ map_init(Map* map)
   
   map->next_row_first_pass = 0;
   map->next_row_second_pass = 0;
-  map->generation_first_pass = 0;
-  map->generation_second_pass = 0;
+  map->generation_first_pass = 1;
+  map->generation_second_pass = 1;
   map->rows_ger_first_pass = (int*)malloc(sizeof(int)*map->lin);
   map->rows_ger_second_pass = (int*)malloc(sizeof(int)*map->lin);
   
