@@ -167,33 +167,11 @@ funciona por duas iterações completas pela matriz do mapa:
 \subsection{Movimentação}
 
 Durante a primeira fase são usadas as funções \textit{position\_move\_fox} e \textit{position\_move\_rabbit}
-onde é alterado o estado temporário da posição para onde o animal se irá mover. Este estado temporário
-contém um vector onde são colocados animais que durante esta geração serão libertados da memória durante
-o segundo passo. Também existem vários apontadores:
+onde são adicionados os animais a uma lista da posição para onde o animal se irá mover.
+Neste primeiro passo é também alterado o estado relativo aos tempos desde a ultima procriação ou comida.
 
-\begin{itemize}
-  \item \textit{oldest\_fox}: apontador para a raposa mais antiga. Caso se movimentem diversas raposas para esta
-    posição, este apontador irá sempre apontar para a raposa mais antiga.
-  \item \textit{hungriest\_fox}: apontador para a raposa com mais fome que foi movida para esta posição neste turno.
-  Caso se mova algum coelho durante a geração para esta posição, este apontador fica nulo, pois apenas a raposa mais
-  velha ganha neste tipo de conflitos.
-  \item \textit{best\_rabbit}: apontador para o coelho com mais idade. Quando é movida alguma raposa para
-  esta posição este apontador deixa de ser usado e o coelho, caso exista, é colocado no vector de libertação de animais.
-\end{itemize}
-
-No final do primeiro passo existem três tipos de estado para estes apontadores:
-
-\begin{itemize}
-  \item Só o \textit{best\_rabbit} aponta: apenas coelhos se movimentaram para esta posição.
-  \item Só o \textit{oldest\_fox} aponta: pelo menos um coelho também se tentou mover para esta posição e foi comido.
-  \item Ambos \textit{oldest\_fox} e \textit{hungriest\_fox} não estão nulos: será escolhida a raposa com mais fome no segundo passo.
-  \item Tudo a nulo: nenhum animal se movimentou para aqui.
-\end{itemize}
-
-O objectivo principal deste sistema de apontadores é resolver os conflitos o mais cedo possível.
-
-Quando finalmente o segundo passo do algoritmo é executado, o apontador para o objecto da posição é alterado
-para respeitar o estado da área temporária e todos os objectos que devem ser libertados apartir desta posição são retirados da memória.
+Quando finalmente o segundo passo do algoritmo é executado, são resolvidos os conflito usando a informação
+da lista e o animal que ficará na posição é seleccionado.
 
 \section{Versão sequencial}
 
@@ -319,7 +297,7 @@ movimentação dos animais durante o primeiro passo, o que tornaria os resultado
 
 Foram necessárias outras alterações no código partilhado entre a versão sequencial e paralela, nomeadamente,
 a adição de um \textit{mutex} para cada posição da matriz. Este é usado para proteger a movimentação
-de um animal para essa posição e toda a gestão da área temporária de dados.
+de um animal para essa posição e respectiva adição à lista de animais.
 
 Em termos de divisão de trabalho e balanceamento de carga, a natureza do algoritmo implementado
 assegura que na grande maioria dos casos nenhuma \textit{thread} irá ter trabalho a mais,

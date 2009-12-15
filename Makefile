@@ -6,7 +6,7 @@ OPTMS = -O2
 CFLAGS = $(WARNINGS) $(DEBUG) $(OPTMS)
 
 OBJS = utils.o map.o object.o position.o thread.o
-BINS = seq simulator generator
+BINS = seq simulator generator simulator2
 
 all: $(OBJS) $(BINS)
 
@@ -15,6 +15,9 @@ seq: seq.o $(OBJS)
 
 simulator: simulator.o $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) simulator.o -o simulator -lpthread
+
+simulator2: simulator2.o $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) simulator2.o -o simulator2 -lpthread
 
 generator: generator.o $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) generator.o -o generator
