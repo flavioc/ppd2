@@ -112,12 +112,15 @@ map_read(FILE* fp)
       return NULL;
     }
      
-    pos = map_position_at(map, x, y); 
+    pos = map_position_at(map, x, y);
     
     if(strcmp(type, "ROCHA") == 0) {
       pos->is_rock = TRUE;
       continue;
     }
+    
+    assert(!pos->is_rock);
+    assert(pos->obj == NULL);
     
     if(strcmp(type, "RAPOSA") == 0)
       obj = (Object*)object_new_fox();
@@ -258,8 +261,6 @@ map_generate(int rows, int cols, int ger_proc_coelhos,
 
   map_init(map);
   
-  map->matrix = (Position*)malloc(sizeof(Position) * rows * cols);
-  
   int i, j;
   Position* pos;
   int gen = 0;
@@ -315,7 +316,7 @@ map_write(Map* map, FILE* fp)
   
   int i, j;
   Position* pos;
-  for(i = 0;i < map->lin; ++i) {
+  for(i = 0; i < map->lin; ++i) {
     for(j = 0; j < map->col; ++j) {
       pos = map_position_at(map, i, j);
       

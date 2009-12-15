@@ -8,9 +8,9 @@
 #include "map.h"
 
 typedef struct {
+  Position* positions[ADJACENT];
   Boolean free_pos[ADJACENT];
   Boolean with_rabbits[ADJACENT];
-  Position* positions[ADJACENT];
 } ThreadData;
 
 void thread_simulate_position(ThreadData* data, Map* map, Position* pos, Coord coord, int ger);

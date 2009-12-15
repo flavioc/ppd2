@@ -114,7 +114,7 @@ run_thread(THREAD_PARAM arg)
       MAIN_UNLOCK;
       
       // do second pass work
-      printf("%d: Second [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
+      //printf("%d: Second [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
 
       for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
         for(j = 0; j < map->col; ++j) {
@@ -122,7 +122,7 @@ run_thread(THREAD_PARAM arg)
         }
         map->rows_ger_second_pass[row] = pass_generation;
       }
-      printf("%d: end Second [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
+      //printf("%d: end Second [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
 
       if(map->the_end)
         break;
@@ -166,7 +166,7 @@ run_thread(THREAD_PARAM arg)
       
       MAIN_UNLOCK;
       
-      printf("%d: First [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
+      //printf("%d: First [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
 
       // do first pass work
       for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
@@ -180,8 +180,8 @@ run_thread(THREAD_PARAM arg)
         
         map->rows_ger_first_pass[row] = pass_generation;
       }
-      printf("%d: end First [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
-      
+      //printf("%d: end First [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
+
       if(map->the_end)
         break;
 

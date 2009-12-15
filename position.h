@@ -7,18 +7,12 @@
 #include "utils.h"
 #include "object.h"
 
-#define MAX_FREE_OBJS 20
-
 typedef struct {
   Boolean is_rock;
   Object* obj;
   
-  Rabbit* best_rabbit;
-  Fox* hungriest_fox;
-  Fox* oldest_fox;
-  
-  Object* free_objects[MAX_FREE_OBJS];
-  int current_free;
+  ObjectList* start;
+  ObjectList* end;
   
   pthread_mutex_t mutex;
 } Position;

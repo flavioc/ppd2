@@ -31,6 +31,8 @@ simulate_gen(ThreadData* data, int ger)
       thread_resolve_conflict(map, pos);
     }
   }
+  
+  //map_print(map, stdout);
 }
 
 static void
