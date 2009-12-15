@@ -28,7 +28,7 @@ simulate_gen(ThreadData* data, int ger)
   for(i = 0; i < map->lin; ++i) {
     for(j = 0; j < map->col; ++j) {
       pos = map_position_at(map, i, j);
-      thread_resolve_conflict(pos);
+      thread_resolve_conflict(map, pos);
     }
   }
 }

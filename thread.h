@@ -14,6 +14,6 @@ typedef struct {
 } ThreadData;
 
 void thread_simulate_position(ThreadData* data, Map* map, Position* pos, Coord coord, int ger);
-void thread_resolve_conflict(Position* pos);
+void thread_resolve_conflict(Map* map, Position* pos);
 
 #endif

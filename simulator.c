@@ -118,17 +118,11 @@ run_thread(THREAD_PARAM arg)
 
       for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
         for(j = 0; j < map->col; ++j) {
-          thread_resolve_conflict(map_position_at(map, row, j));
+          thread_resolve_conflict(map, map_position_at(map, row, j));
         }
-      }
-      
-      printf("%d: end Second [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
-      
-      MAIN_LOCK;
-      for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
         map->rows_ger_second_pass[row] = pass_generation;
       }
-      MAIN_UNLOCK;
+      printf("%d: end Second [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
 
       if(map->the_end)
         break;
@@ -183,15 +177,10 @@ run_thread(THREAD_PARAM arg)
 
           thread_simulate_position(data, map, map_position_at(map, row, j), coord, pass_generation - 1);
         }
-      }
-      
-      printf("%d: end First [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
-      
-      MAIN_LOCK;
-      for(i = 0, row = pass_line; i < total_lines; ++i, ++row) {
+        
         map->rows_ger_first_pass[row] = pass_generation;
       }
-      MAIN_UNLOCK;
+      printf("%d: end First [%d, %d]\n", pass_generation, pass_line, pass_line + total_lines);
       
       if(map->the_end)
         break;

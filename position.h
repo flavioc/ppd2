@@ -21,7 +21,6 @@ typedef struct {
   int current_free;
   
   pthread_mutex_t mutex;
-  pthread_mutex_t obj_mutex;
 } Position;
 
 void position_init(Position* pos);
