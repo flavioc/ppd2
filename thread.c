@@ -10,27 +10,34 @@ thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, i
   int i, total_free = ADJACENT;
   Coord tmp_coord;
   Position* tmp_pos = NULL;
+  Boolean free_pos[ADJACENT];
+  Position* positions[ADJACENT];
+  
+  for(i = 0; i < ADJACENT; ++i) {
+    positions[i] = NULL;
+    free_pos[i] = FALSE;
+  }
 
   for(i = 0; i < ADJACENT; ++i) {
     tmp_coord = coord_at_direction(coord, i);
     
     if(!map_inside_coord(map, tmp_coord)) {
-      data->free_pos[i] = FALSE;
+      free_pos[i] = FALSE;
       --total_free;
       continue;
     }
     
     // verificar se existe uma raposa ou rocha
-    tmp_pos = data->positions[i] = map_position_at_coord(map, tmp_coord);
+    tmp_pos = positions[i] = map_position_at_coord(map, tmp_coord);
     
     if(tmp_pos->is_rock || tmp_pos->obj)
     {
-      data->free_pos[i] = FALSE;
+      free_pos[i] = FALSE;
       --total_free;
       continue;
     }
     
-    data->free_pos[i] = TRUE;
+    free_pos[i] = TRUE;
   }
   
   if(total_free == 0) {
@@ -44,7 +51,7 @@ thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, i
   int real_index = -1;
   
   for(i = 0; i < ADJACENT; ++i) {
-    if(data->free_pos[i]) {
+    if(free_pos[i]) {
       if(!index--) {
         real_index = i;
         break;
@@ -58,48 +65,55 @@ thread_simulate_rabbit(ThreadData* data, Map* map, Coord coord, Position* pos, i
     position_move_rabbit(pos, object_new_rabbit());
   }
   
-  position_move_rabbit(data->positions[real_index], rabbit);
+  position_move_rabbit(positions[real_index], rabbit);
 }
 
 static void
 thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int ger)
 {
   Fox* fox = (Fox*)pos->obj;
-  
+  Boolean free_pos[ADJACENT], with_rabbits[ADJACENT];
   int i, total_free = ADJACENT, rabbits = 0;
   Coord tmp_coord;
   Position* tmp_pos;
+  Position* positions[ADJACENT];
+  
+  for(i = 0; i < ADJACENT; ++i) {
+    positions[i] = NULL;
+    free_pos[i] = FALSE;
+    with_rabbits[i] = FALSE;
+  }
   
   for(i = 0; i < ADJACENT; ++i) {
     tmp_coord = coord_at_direction(coord, i);
     
     if(!map_inside_coord(map, tmp_coord)) {
-      data->free_pos[i] = FALSE;
+      free_pos[i] = FALSE;
       --total_free;
-      data->with_rabbits[i] = FALSE;
+      with_rabbits[i] = FALSE;
       continue;
     }
     
-    tmp_pos = data->positions[i] = map_position_at_coord(map, tmp_coord);
+    tmp_pos = positions[i] = map_position_at_coord(map, tmp_coord);
     
     if(tmp_pos->is_rock ||
       (tmp_pos->obj && tmp_pos->obj->type == FOX))
     {
-      data->free_pos[i] = FALSE;
+      free_pos[i] = FALSE;
       --total_free;
-      data->with_rabbits[i] = FALSE;
+      with_rabbits[i] = FALSE;
       continue;
     }
     
     if(tmp_pos->obj && tmp_pos->obj->type == RABBIT) {
-      data->with_rabbits[i] = TRUE;
-      data->free_pos[i] = TRUE;
+      with_rabbits[i] = TRUE;
+      free_pos[i] = TRUE;
       ++rabbits;
       continue;
     }
     
-    data->free_pos[i] = TRUE;
-    data->with_rabbits[i] = FALSE;
+    free_pos[i] = TRUE;
+    with_rabbits[i] = FALSE;
   }
   
   if(total_free == 0) {
@@ -113,9 +127,9 @@ thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int 
 
   if(rabbits > 0) {
     index %= rabbits;
-    bool_array = data->with_rabbits;
+    bool_array = with_rabbits;
   } else {
-    bool_array = data->free_pos;
+    bool_array = free_pos;
     index %= total_free;
   }
 
@@ -134,7 +148,7 @@ thread_simulate_fox(ThreadData* data, Map* map, Coord coord, Position* pos, int 
     position_move_fox(pos, object_new_fox());
   }
 
-  position_move_fox(data->positions[real_index], fox);
+  position_move_fox(positions[real_index], fox);
 }
 
 void
@@ -151,9 +165,12 @@ thread_simulate_position(ThreadData* data, Map* map, Position* pos, Coord coord,
 void
 thread_resolve_conflict(Map* map, Position* pos)
 {
-  pos->obj = NULL;
-  
   Boolean fox_eat = FALSE;
+  
+  assert((!pos->oldest_fox && !pos->hungriest_fox && pos->best_rabbit) ||
+    (pos->hungriest_fox && pos->oldest_fox && !pos->best_rabbit) ||
+    (pos->oldest_fox && !pos->hungriest_fox && !pos->best_rabbit) ||
+    (!pos->oldest_fox && !pos->hungriest_fox && !pos->best_rabbit));
   
   if(pos->best_rabbit) { // so apareceram coelhos
     pos->obj = (Object*)pos->best_rabbit;
@@ -171,6 +188,9 @@ thread_resolve_conflict(Map* map, Position* pos)
 
     pos->obj = (Object*)pos->oldest_fox;
     pos->oldest_fox = NULL;
+  } else {
+    // nada
+    pos->obj = NULL;
   }
   
   Object* obj = pos->obj;
